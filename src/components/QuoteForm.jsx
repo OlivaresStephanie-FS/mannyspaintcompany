@@ -120,24 +120,37 @@ const styles = {
 };
 
 async function uploadToCloudinary(file) {
-	const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-	const preset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+	// 1) Ask your Netlify function for signature + upload params
+	const signRes = await fetch("/api/cloudinary-sign", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			contentType: file.type,
+		}),
+	});
 
-	if (!cloudName || !preset) {
-		throw new Error("Missing Cloudinary env vars. Check your .env file.");
+	const signData = await signRes.json().catch(() => ({}));
+	if (!signRes.ok || !signData.ok) {
+		throw new Error(signData?.error || "Could not sign upload");
 	}
 
+	const { cloudName, apiKey, timestamp, folder, signature } = signData;
+
+	// 2) Upload directly to Cloudinary with signed parameters
 	const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
 
 	const formData = new FormData();
 	formData.append("file", file);
-	formData.append("upload_preset", preset);
+	formData.append("api_key", apiKey);
+	formData.append("timestamp", timestamp);
+	formData.append("signature", signature);
+	formData.append("folder", folder);
 
 	const res = await fetch(endpoint, { method: "POST", body: formData });
-	const data = await res.json();
+	const data = await res.json().catch(() => ({}));
 
 	if (!res.ok) {
-		console.error("Cloudinary error:", data);
+		console.error("Cloudinary upload error:", data);
 		throw new Error(data?.error?.message || "Cloudinary upload failed");
 	}
 
@@ -224,15 +237,7 @@ export default function QuoteForm() {
 		setError("");
 
 		try {
-			// Optional: require at least 1 file
-			if (!files.length) {
-				setError(
-					"Please add at least 1 photo or PDF to help us quote accurately.",
-				);
-				return;
-			}
-
-			// 1) Upload files to Cloudinary
+			// 1) Upload files to Cloudinary (optional)
 			const fileUrls = [];
 			for (const file of files) {
 				const url = await uploadToCloudinary(file);
@@ -242,7 +247,7 @@ export default function QuoteForm() {
 			// 2) Send quote + URLs to your Netlify function
 			const payload = {
 				...form,
-				fileUrls,
+				fileUrls, // will be [] if no uploads
 				submittedAt: new Date().toISOString(),
 			};
 
@@ -263,9 +268,16 @@ export default function QuoteForm() {
 
 			alert("Quote request sent successfully!");
 
-			// Optional reset
-			// setFiles([]);
-			// setForm({ name: "", phone: "", email: "", service: "Painting", description: "" });
+			// 3) Reset form after alert is closed
+			setForm({
+				name: "",
+				phone: "",
+				email: "",
+				service: "Painting",
+				description: "",
+			});
+			setFiles([]);
+			if (fileInputRef.current) fileInputRef.current.value = "";
 		} catch (err) {
 			console.error(err);
 			setError(err.message || "Upload failed. Please try again.");

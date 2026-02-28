@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": ["../../../../../../../Users/solimb/Desktop/SOLI.NYC/MPC/mannyspaintcompany/netlify/functions/code.js"],
-  "sourceRoot": "/private/var/folders/g0/7rf45p_103n5h175bmzxvm580000gn/T/tmp-2702-0HCN0cqlfWPu",
+  "sourceRoot": "/private/var/folders/g0/7rf45p_103n5h175bmzxvm580000gn/T/tmp-9077-MMguH17MgFzq",
   "sourcesContent": ["hello.js;\nexport async function handler() {\n\treturn {\n\t\tstatusCode: 200,\n\t\tbody: JSON.stringify({ message: \"Hello from Netlify \uD83D\uDC4B\" }),\n\t};\n}\n"],
   "mappings": ";;;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAA,MAAM;AACN,eAAsB,UAAU;AAC/B,SAAO;AAAA,IACN,YAAY;AAAA,IACZ,MAAM,KAAK,UAAU,EAAE,SAAS,+BAAwB,CAAC;AAAA,EAC1D;AACD;",
   "names": []
