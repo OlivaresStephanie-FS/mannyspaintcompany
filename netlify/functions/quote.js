@@ -32,13 +32,27 @@ export const handler = async (event) => {
 
 		const db = await getDb();
 
+		const uploads = Array.isArray(payload.uploads) ? payload.uploads : [];
+
+		// keep only the fields we expect + require url/publicId
+		const cleanedUploads = uploads
+			.map((u) => ({
+				url: u?.url || "",
+				publicId: u?.publicId || "",
+				resourceType: u?.resourceType || "",
+				bytes: Number(u?.bytes || 0),
+				format: u?.format || "",
+				originalFilename: u?.originalFilename || "",
+			}))
+			.filter((u) => u.url && u.publicId);
+
 		const doc = {
 			name: payload.name,
 			phone: payload.phone,
 			email: payload.email || "",
 			service: payload.service,
 			description: payload.description,
-			fileUrls: Array.isArray(payload.fileUrls) ? payload.fileUrls : [],
+			uploads: cleanedUploads, // <-- real uploads from the form
 			submittedAt: payload.submittedAt
 				? new Date(payload.submittedAt)
 				: new Date(),
