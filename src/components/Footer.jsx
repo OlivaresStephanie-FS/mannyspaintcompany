@@ -11,7 +11,7 @@ export default function Footer() {
 					Manny's Painting Company
 				</div>
 				<div style={{ marginTop: 6 }}>
-					Serving NYC / NJ • Licensed & insured (edit as needed)
+					Serving NYC / NJ • Licensed & Insured
 				</div>
 				<div style={{ marginTop: 12 }}>
 					© {new Date().getFullYear()} Soli.NYC All

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import QuoteForm from "../components/QuoteForm";
 
 const styles = {
@@ -70,7 +71,108 @@ const styles = {
 	},
 	quoteGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 },
 	small: { color: "#666", fontSize: 14, lineHeight: 1.5 },
+
+	// --- Reviews styles ---
+	reviewsGrid: {
+		display: "grid",
+		gridTemplateColumns: "repeat(3, 1fr)",
+		gap: 12,
+	},
+	reviewCard: {
+		padding: 14,
+		borderRadius: 14,
+		border: "1px solid #eee",
+		background: "white",
+	},
+	reviewText: {
+		marginTop: 8,
+		marginBottom: 0,
+		color: "#222",
+		lineHeight: 1.5,
+		fontSize: 14,
+		whiteSpace: "pre-wrap",
+	},
+	reviewMeta: {
+		marginTop: 10,
+		color: "#666",
+		fontSize: 13,
+	},
+	stars: { fontSize: 18, letterSpacing: 1 },
 };
+
+function Stars({ n }) {
+	const rating = Math.max(0, Math.min(5, Number(n || 0)));
+	const filled = "★".repeat(rating);
+	const empty = "☆".repeat(5 - rating);
+
+	return (
+		<div style={styles.stars} aria-label={`${rating} out of 5 stars`}>
+			<span style={{ color: "#f5b301" }}>{filled}</span>
+			<span style={{ color: "#ccc" }}>{empty}</span>
+		</div>
+	);
+}
+
+function ReviewsSection() {
+	const [items, setItems] = useState([]);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		let alive = true;
+
+		(async () => {
+			try {
+				const res = await fetch(
+					"/.netlify/functions/public-reviews?limit=6",
+				);
+				const data = await res.json().catch(() => ({}));
+				if (!alive) return;
+				setItems(Array.isArray(data.items) ? data.items : []);
+			} catch {
+				if (!alive) return;
+				setItems([]);
+			} finally {
+				if (!alive) return;
+				setLoading(false);
+			}
+		})();
+
+		return () => {
+			alive = false;
+		};
+	}, []);
+
+	if (loading) return null;
+	if (!items.length) return null;
+
+	return (
+		<section style={styles.section}>
+			<h2 style={styles.sectionTitle}>Customer Reviews</h2>
+			<div style={styles.reviewsGrid}>
+				{items.map((r) => (
+					<div
+						key={r._id || `${r.submittedAt}-${Math.random()}`}
+						style={styles.reviewCard}>
+						<Stars n={r.rating} />
+						<p style={styles.reviewText}>
+							{r.text ? (
+								r.text
+							) : (
+								<span style={{ color: "#888" }}>
+									(No comment)
+								</span>
+							)}
+						</p>
+						<div style={styles.reviewMeta}>
+							— {r.name || "Anonymous"}{" "}
+							{r.service ? `• ${r.service}` : ""}
+						</div>
+					</div>
+				))}
+			</div>
+		</section>
+	);
+}
 
 export default function Home() {
 	function scrollToQuote() {
@@ -179,6 +281,9 @@ export default function Home() {
 					<QuoteForm />
 				</div>
 			</section>
+
+			{/* REVIEWS (approved only) */}
+			<ReviewsSection />
 		</div>
 	);
 }

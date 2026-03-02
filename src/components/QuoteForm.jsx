@@ -124,9 +124,7 @@ async function uploadToCloudinary(file) {
 	const signRes = await fetch("/api/cloudinary-sign", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({
-			contentType: file.type,
-		}),
+		body: JSON.stringify({ contentType: file.type }),
 	});
 
 	const signData = await signRes.json().catch(() => ({}));
@@ -154,9 +152,33 @@ async function uploadToCloudinary(file) {
 		throw new Error(data?.error?.message || "Cloudinary upload failed");
 	}
 
-	return data.secure_url;
-}
+	// Build a thumbnail URL from public_id (NO extra upload)
+	const publicId = data.public_id;
+	const version = data.version;
+	const resourceType = data.resource_type; // "image" or "raw" (pdf often becomes raw)
 
+	// For images: use image/upload + transformations
+	// For PDFs: we still use image/upload with pg_1 + f_jpg to preview page 1
+	const thumbTransforms =
+		file.type === "application/pdf"
+			? "f_jpg,pg_1,w_420,h_420,c_fill,q_auto"
+			: "w_420,h_420,c_fill,q_auto,f_auto";
+
+	const thumbUrl = `https://res.cloudinary.com/${cloudName}/image/upload/${thumbTransforms}/v${version}/${publicId}.jpg`;
+
+	return {
+		url: data.secure_url,
+		publicId,
+		resourceType,
+		bytes: data.bytes,
+		format: data.format || "",
+		originalFilename: data.original_filename || file.name,
+		version,
+		thumbUrl,
+		width: data.width || 0, 
+		height: data.height || 0,
+	};
+}
 export default function QuoteForm() {
 	const [form, setForm] = useState({
 		name: "",
@@ -238,19 +260,19 @@ export default function QuoteForm() {
 
 		try {
 			// 1) Upload files to Cloudinary (optional)
-			const fileUrls = [];
+			const uploads = [];
 			for (const file of files) {
-				const url = await uploadToCloudinary(file);
-				fileUrls.push(url);
+				const uploaded = await uploadToCloudinary(file);
+				uploads.push(uploaded);
 			}
 
-			// 2) Send quote + URLs to your Netlify function
+			// 2) Send quote + uploads to your Netlify function
 			const payload = {
 				...form,
-				fileUrls, // will be [] if no uploads
+				uploads, // ✅ matches your quote.js
 				submittedAt: new Date().toISOString(),
 			};
-
+			console.log("payload going to /api/quote:", payload);
 			const res = await fetch("/api/quote", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },

@@ -60,6 +60,14 @@ export const handler = async (event) => {
 		const folder =
 			process.env.CLOUDINARY_FOLDER || "mannyspaintcompany/quotes";
 
+		// 🔎 TEMP DEBUG LOG (remove after testing)
+		console.log("Cloudinary env check:", {
+			cloud: process.env.CLOUDINARY_CLOUD_NAME,
+			keyLast4: (process.env.CLOUDINARY_API_KEY || "").slice(-4),
+			secretLen: (process.env.CLOUDINARY_API_SECRET || "").length,
+			folder,
+		});
+
 		// Sign these parameters
 		const paramsToSign = { timestamp, folder };
 
