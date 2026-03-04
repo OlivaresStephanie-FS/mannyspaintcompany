@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getToken, clearToken } from "../lib/adminAuth";
 
 function formatDate(v) {
 	try {
@@ -12,10 +14,8 @@ function formatDate(v) {
 // by inserting a transformation after `/upload/`
 function toThumbUrl(url, w = 140, h = 100) {
 	if (!url || typeof url !== "string") return "";
-	// example: https://res.cloudinary.com/<cloud>/image/upload/v123/folder/id.jpg
 	const needle = "/upload/";
 	if (!url.includes(needle)) return url;
-
 	const transform = `c_fill,w_${w},h_${h},q_auto,f_auto/`;
 	return url.replace(needle, `${needle}${transform}`);
 }
@@ -30,12 +30,6 @@ const styles = {
 	},
 	row: { display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" },
 	label: { fontSize: 13, fontWeight: 700, color: "#222" },
-	input: {
-		padding: "10px 12px",
-		borderRadius: 10,
-		border: "1px solid #ddd",
-		minWidth: 280,
-	},
 	btn: {
 		padding: "10px 12px",
 		borderRadius: 10,
@@ -72,7 +66,11 @@ const styles = {
 		borderBottom: "1px solid #eee",
 		whiteSpace: "nowrap",
 	},
-	td: { padding: "10px 8px", borderBottom: "1px solid #f1f1f1", verticalAlign: "top" },
+	td: {
+		padding: "10px 8px",
+		borderBottom: "1px solid #f1f1f1",
+		verticalAlign: "top",
+	},
 	name: { fontWeight: 800, color: "#111" },
 	sub: { fontSize: 12, color: "#666", marginTop: 2 },
 	chip: {
@@ -93,28 +91,64 @@ const styles = {
 		display: "block",
 	},
 	link: { fontSize: 12, fontWeight: 800, color: "#111" },
-	pager: { display: "flex", gap: 10, alignItems: "center", marginTop: 14, flexWrap: "wrap" },
+	pager: {
+		display: "flex",
+		gap: 10,
+		alignItems: "center",
+		marginTop: 14,
+		flexWrap: "wrap",
+	},
 	muted: { fontSize: 12, color: "#666" },
 };
 
+const LIMIT = 20;
+
 export default function AdminQuotes() {
-	const [token, setToken] = useState(() => localStorage.getItem("ADMIN_TOKEN") || "");
+	const navigate = useNavigate();
+
 	const [items, setItems] = useState([]);
 	const [total, setTotal] = useState(0);
 	const [page, setPage] = useState(1);
-	const [limit] = useState(20);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 
-	const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit]);
+	const totalPages = useMemo(
+		() => Math.max(1, Math.ceil(total / LIMIT)),
+		[total],
+	);
 
-	async function load(p = page) {
+	// ✅ Guard: must be logged in
+	useEffect(() => {
+		const t = String(getToken() || "").trim();
+		if (!t) navigate("/admin/login");
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	async function load(p = 1) {
 		setError("");
 		setLoading(true);
+
 		try {
-			const res = await fetch(`/api/admin-quotes?page=${p}&limit=${limit}`, {
-				headers: token ? { Authorization: `Bearer ${token}` } : {},
-			});
+			const t = String(getToken() || "").trim();
+			if (!t) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
+
+			const res = await fetch(
+				`/.netlify/functions/admin-quotes?page=${p}&limit=${LIMIT}`,
+				{
+					headers: { Authorization: `Bearer ${t}` },
+				},
+			);
+
+			// ✅ If JWT expired/invalid, force relogin
+			if (res.status === 401) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
 
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok || !data.ok) {
@@ -127,31 +161,20 @@ export default function AdminQuotes() {
 		} catch (e) {
 			setItems([]);
 			setTotal(0);
-			setError(e.message || "Error loading quotes");
+			setError(e?.message || "Error loading quotes");
 		} finally {
 			setLoading(false);
 		}
 	}
 
-    
-
 	useEffect(() => {
-		if (token) load(1);
+		load(1);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	function saveToken() {
-		localStorage.setItem("ADMIN_TOKEN", token);
-		load(1);
-	}
-
 	function logout() {
-		localStorage.removeItem("ADMIN_TOKEN");
-		setToken("");
-		setItems([]);
-		setTotal(0);
-		setPage(1);
-		setError("");
+		clearToken();
+		navigate("/admin/login");
 	}
 
 	return (
@@ -163,22 +186,16 @@ export default function AdminQuotes() {
 				</p>
 
 				<div style={styles.row}>
-					<div>
-						<div style={styles.label}>Admin Token</div>
-						<input
-							style={styles.input}
-							value={token}
-							onChange={(e) => setToken(e.target.value)}
-							placeholder="Paste ADMIN_TOKEN here"
-						/>
-					</div>
-
-					<button style={styles.btnPrimary} onClick={saveToken} disabled={!token || loading}>
-						{loading ? "Loading..." : "Load Quotes"}
+					<button
+						style={styles.btnPrimary}
+						onClick={() => load(1)}
+						disabled={loading}
+					>
+						{loading ? "Loading..." : "Refresh"}
 					</button>
 
 					<button style={styles.btn} onClick={logout}>
-						Clear Token
+						Log out
 					</button>
 
 					<div style={styles.muted}>
@@ -201,58 +218,121 @@ export default function AdminQuotes() {
 						</thead>
 						<tbody>
 							{items.map((q) => {
-								const uploads = Array.isArray(q.uploads) ? q.uploads : [];
+								const uploads = Array.isArray(q.uploads)
+									? q.uploads
+									: [];
 								return (
 									<tr key={q._id}>
-										<td style={styles.td}>{formatDate(q.submittedAt)}</td>
-
 										<td style={styles.td}>
-											<div style={styles.name}>{q.name || "-"}</div>
-											<div style={styles.sub}>{q.phone || ""}</div>
-											<div style={styles.sub}>{q.email || ""}</div>
+											{formatDate(q.submittedAt)}
 										</td>
 
 										<td style={styles.td}>
-											<div style={{ fontWeight: 800 }}>{q.service || "-"}</div>
-											<div style={styles.sub} title={q.description || ""}>
-												{(q.description || "").slice(0, 110)}
-												{(q.description || "").length > 110 ? "…" : ""}
+											<div style={styles.name}>
+												{q.name || "-"}
+											</div>
+											<div style={styles.sub}>
+												{q.phone || ""}
+											</div>
+											<div style={styles.sub}>
+												{q.email || ""}
 											</div>
 										</td>
 
 										<td style={styles.td}>
-											<span style={styles.chip}>{q.status || "new"}</span>
+											<div style={{ fontWeight: 800 }}>
+												{q.service || "-"}
+											</div>
+											<div
+												style={styles.sub}
+												title={q.description || ""}
+											>
+												{(q.description || "").slice(
+													0,
+													110,
+												)}
+												{(q.description || "").length >
+												110
+													? "…"
+													: ""}
+											</div>
+										</td>
+
+										<td style={styles.td}>
+											<span style={styles.chip}>
+												{q.status || "new"}
+											</span>
 										</td>
 
 										<td style={styles.td}>
 											{uploads.length ? (
 												<div style={styles.thumbs}>
-													{uploads.slice(0, 6).map((u, idx) => {
-														const isImage = (u.resourceType || "").toLowerCase() === "image";
-														const fullUrl = u.url;
-														const thumbUrl = isImage ? toThumbUrl(fullUrl) : "";
+													{uploads
+														.slice(0, 6)
+														.map((u, idx) => {
+															const isImage =
+																(
+																	u.resourceType ||
+																	""
+																).toLowerCase() ===
+																"image";
+															const fullUrl =
+																u.url;
+															const thumbUrl =
+																isImage
+																	? toThumbUrl(
+																			fullUrl,
+																		)
+																	: "";
 
-														return (
-															<div key={`${q._id}-${idx}`}>
-																{isImage ? (
-																	<a href={fullUrl} target="_blank" rel="noreferrer">
-																		<img
-																			src={thumbUrl}
-																			alt={u.originalFilename || "upload"}
-																			style={styles.thumb}
-																		/>
-																	</a>
-																) : (
-																	<a href={fullUrl} target="_blank" rel="noreferrer" style={styles.link}>
-																		Open file
-																	</a>
-																)}
-															</div>
-														);
-													})}
+															return (
+																<div
+																	key={`${q._id}-${idx}`}
+																>
+																	{isImage ? (
+																		<a
+																			href={
+																				fullUrl
+																			}
+																			target="_blank"
+																			rel="noreferrer"
+																		>
+																			<img
+																				src={
+																					thumbUrl
+																				}
+																				alt={
+																					u.originalFilename ||
+																					"upload"
+																				}
+																				style={
+																					styles.thumb
+																				}
+																			/>
+																		</a>
+																	) : (
+																		<a
+																			href={
+																				fullUrl
+																			}
+																			target="_blank"
+																			rel="noreferrer"
+																			style={
+																				styles.link
+																			}
+																		>
+																			Open
+																			file
+																		</a>
+																	)}
+																</div>
+															);
+														})}
 												</div>
 											) : (
-												<span style={styles.muted}>None</span>
+												<span style={styles.muted}>
+													None
+												</span>
 											)}
 										</td>
 									</tr>
@@ -262,7 +342,9 @@ export default function AdminQuotes() {
 							{!items.length && !loading ? (
 								<tr>
 									<td style={styles.td} colSpan={5}>
-										<span style={styles.muted}>No quotes loaded yet.</span>
+										<span style={styles.muted}>
+											No quotes found.
+										</span>
 									</td>
 								</tr>
 							) : null}
@@ -274,7 +356,8 @@ export default function AdminQuotes() {
 					<button
 						style={styles.btn}
 						onClick={() => load(Math.max(1, page - 1))}
-						disabled={loading || page <= 1}>
+						disabled={loading || page <= 1}
+					>
 						Prev
 					</button>
 
@@ -285,12 +368,9 @@ export default function AdminQuotes() {
 					<button
 						style={styles.btn}
 						onClick={() => load(Math.min(totalPages, page + 1))}
-						disabled={loading || page >= totalPages}>
+						disabled={loading || page >= totalPages}
+					>
 						Next
-					</button>
-
-					<button style={styles.btn} onClick={() => load(page)} disabled={loading || !token}>
-						Refresh
 					</button>
 				</div>
 			</div>

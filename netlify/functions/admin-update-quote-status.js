@@ -2,6 +2,7 @@ import { getDb } from "./_db.js";
 import { ObjectId } from "mongodb";
 import nodemailer from "nodemailer";
 import { makeReviewToken, hashToken } from "./_reviewToken.js";
+import jwt from "jsonwebtoken";
 
 const ALLOWED = new Set([
 	"new",
@@ -36,13 +37,22 @@ function isAllowedTransition(fromStatus, toStatus) {
 }
 
 function isValidBearer(event) {
-	const expected = process.env.ADMIN_TOKEN;
 	const auth =
 		event.headers?.authorization || event.headers?.Authorization || "";
-	if (!expected) return false;
 	if (!auth.startsWith("Bearer ")) return false;
+
 	const token = auth.slice("Bearer ".length).trim();
-	return token === expected;
+	if (!token) return false;
+
+	const secret = process.env.ADMIN_JWT_SECRET;
+	if (!secret) return false;
+
+	try {
+		jwt.verify(token, secret);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 function createTransporter() {
@@ -101,7 +111,10 @@ export const handler = async (event) => {
 		if (event.httpMethod !== "PATCH") {
 			return {
 				statusCode: 405,
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-store",
+				},
 				body: JSON.stringify({
 					ok: false,
 					error: "Method Not Allowed",
@@ -112,7 +125,10 @@ export const handler = async (event) => {
 		if (!isValidBearer(event)) {
 			return {
 				statusCode: 401,
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-store",
+				},
 				body: JSON.stringify({ ok: false, error: "Unauthorized" }),
 			};
 		}
@@ -122,7 +138,10 @@ export const handler = async (event) => {
 		if (!quoteId || typeof quoteId !== "string" || quoteId.length !== 24) {
 			return {
 				statusCode: 400,
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-store",
+				},
 				body: JSON.stringify({
 					ok: false,
 					error: "Invalid quoteId format",
@@ -133,7 +152,10 @@ export const handler = async (event) => {
 		if (!ALLOWED.has(status)) {
 			return {
 				statusCode: 400,
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-store",
+				},
 				body: JSON.stringify({ ok: false, error: "Invalid status" }),
 			};
 		}
@@ -145,7 +167,10 @@ export const handler = async (event) => {
 		if (!current) {
 			return {
 				statusCode: 404,
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-store",
+				},
 				body: JSON.stringify({ ok: false, error: "Quote not found" }),
 			};
 		}
@@ -154,7 +179,10 @@ export const handler = async (event) => {
 		if (!isAllowedTransition(fromStatus, status)) {
 			return {
 				statusCode: 400,
-				headers: { "Content-Type": "application/json" },
+				headers: {
+					"Content-Type": "application/json",
+					"Cache-Control": "no-store",
+				},
 				body: JSON.stringify({
 					ok: false,
 					error: `Invalid status transition: ${fromStatus} → ${status}`,
@@ -282,14 +310,20 @@ export const handler = async (event) => {
 
 		return {
 			statusCode: 200,
-			headers: { "Content-Type": "application/json" },
+			headers: {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-store",
+			},
 			body: JSON.stringify({ ok: true, quote: updated }),
 		};
 	} catch (err) {
 		console.error("admin-update-quote-status error:", err);
 		return {
 			statusCode: 500,
-			headers: { "Content-Type": "application/json" },
+			headers: {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-store",
+			},
 			body: JSON.stringify({ ok: false, error: "Server error" }),
 		};
 	}

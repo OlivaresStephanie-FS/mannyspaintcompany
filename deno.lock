@@ -15,11 +15,15 @@
         "npm:@types/react-dom@^19.2.3",
         "npm:@types/react@^19.2.7",
         "npm:@vitejs/plugin-react@^5.1.1",
+        "npm:cloudinary@^2.9.0",
         "npm:eslint-plugin-react-hooks@^7.0.1",
         "npm:eslint-plugin-react-refresh@~0.4.24",
         "npm:eslint@^9.39.1",
         "npm:globals@^16.5.0",
+        "npm:mongodb@^7.1.0",
+        "npm:nodemailer@^8.0.1",
         "npm:react-dom@^19.2.0",
+        "npm:react-router-dom@^7.13.1",
         "npm:react@^19.2.0",
         "npm:vite@^7.3.1"
       ]

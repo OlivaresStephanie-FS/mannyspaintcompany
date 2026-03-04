@@ -2,31 +2,38 @@ import { getDb } from "./_db.js";
 import { ObjectId } from "mongodb";
 import nodemailer from "nodemailer";
 import { makeReviewToken, hashToken } from "./_reviewToken.js";
+import jwt from "jsonwebtoken";
+
+function json(statusCode, body) {
+	return {
+		statusCode,
+		headers: {
+			"Content-Type": "application/json",
+			"Cache-Control": "no-store",
+		},
+		body: JSON.stringify(body),
+	};
+}
 
 function isValidBearer(event) {
-	const expected = process.env.ADMIN_TOKEN;
 	const auth =
 		event.headers?.authorization || event.headers?.Authorization || "";
-
-	console.log(
-		"UPDATE STATUS auth header prefix:",
-		auth ? auth.slice(0, 20) : "(empty)",
-	);
-	console.log("UPDATE STATUS expected token set?:", !!expected);
-	console.log(
-		"UPDATE STATUS expected length:",
-		expected ? expected.length : 0,
-	);
-
-	if (!expected) return false;
 	if (!auth.startsWith("Bearer ")) return false;
+
 	const token = auth.slice("Bearer ".length).trim();
+	if (!token) return false;
 
-	console.log("UPDATE STATUS token length:", token.length);
-	console.log("UPDATE STATUS match?:", token === expected);
+	const secret = process.env.ADMIN_JWT_SECRET;
+	if (!secret) return false;
 
-	return token === expected;
+	try {
+		jwt.verify(token, secret);
+		return true;
+	} catch {
+		return false;
+	}
 }
+
 function createTransporter() {
 	const host = process.env.SMTP_HOST;
 	const port = Number(process.env.SMTP_PORT || 465);
@@ -66,34 +73,31 @@ function buildReviewEmailHtml({ name, service, reviewLink }) {
 export const handler = async (event) => {
 	try {
 		if (event.httpMethod !== "PATCH") {
-			return { statusCode: 405, body: "Method Not Allowed" };
+			return json(405, { ok: false, error: "Method Not Allowed" });
 		}
 
 		if (!isValidBearer(event)) {
-			return { statusCode: 401, body: "Unauthorized" };
+			return json(401, { ok: false, error: "Unauthorized" });
 		}
 
 		const { quoteId } = JSON.parse(event.body || "{}");
 
 		if (!quoteId || quoteId.length !== 24) {
-			return { statusCode: 400, body: "Invalid quoteId" };
+			return json(400, { ok: false, error: "Invalid quoteId" });
 		}
 
 		const db = await getDb();
 		const _id = new ObjectId(quoteId);
 
 		const quote = await db.collection("quotes").findOne({ _id });
-
-		if (!quote) {
-			return { statusCode: 404, body: "Quote not found" };
-		}
+		if (!quote) return json(404, { ok: false, error: "Quote not found" });
 
 		if (quote.status !== "completed") {
-			return { statusCode: 400, body: "Quote not completed yet" };
+			return json(400, { ok: false, error: "Quote not completed yet" });
 		}
 
 		if (!quote.email) {
-			return { statusCode: 400, body: "No client email on file" };
+			return json(400, { ok: false, error: "No client email on file" });
 		}
 
 		const secret = process.env.REVIEW_TOKEN_SECRET;
@@ -102,6 +106,13 @@ export const handler = async (event) => {
 			/\/+$/,
 			"",
 		);
+
+		if (!secret || !siteUrl) {
+			return json(500, {
+				ok: false,
+				error: "Review link not configured",
+			});
+		}
 
 		const rawToken = makeReviewToken();
 		const tokenHash = hashToken(rawToken, secret);
@@ -140,12 +151,9 @@ export const handler = async (event) => {
 			});
 		}
 
-		return {
-			statusCode: 200,
-			body: JSON.stringify({ ok: true }),
-		};
+		return json(200, { ok: true });
 	} catch (err) {
 		console.error("admin-resend-review-link error:", err);
-		return { statusCode: 500, body: "Server error" };
+		return json(500, { ok: false, error: "Server error" });
 	}
 };

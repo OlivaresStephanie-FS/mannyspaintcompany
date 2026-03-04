@@ -1,5 +1,6 @@
 import { getDb } from "./_db.js";
 import { ObjectId } from "mongodb";
+import jwt from "jsonwebtoken";
 
 function json(statusCode, body) {
 	return {
@@ -14,12 +15,22 @@ function json(statusCode, body) {
 }
 
 function isValidBearer(event) {
-	const expected = process.env.ADMIN_TOKEN;
 	const auth =
 		event.headers?.authorization || event.headers?.Authorization || "";
-	if (!expected) return false;
 	if (!auth.startsWith("Bearer ")) return false;
-	return auth.slice("Bearer ".length).trim() === expected;
+
+	const token = auth.slice("Bearer ".length).trim();
+	if (!token) return false;
+
+	const secret = process.env.ADMIN_JWT_SECRET;
+	if (!secret) return false;
+
+	try {
+		jwt.verify(token, secret);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 const ALLOWED = new Set(["pending", "approved", "rejected"]);

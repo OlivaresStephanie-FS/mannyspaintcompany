@@ -1,15 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { getToken, clearToken } from "../lib/adminAuth";
+import { useNavigate } from "react-router-dom";
 
 const LIMIT = 10;
 
 export default function AdminReviews() {
-	// Token: draft vs applied (prevents reload on every keystroke)
-	const [tokenInput, setTokenInput] = useState(
-		() => localStorage.getItem("ADMIN_TOKEN") || "",
-	);
-	const [token, setToken] = useState(
-		() => localStorage.getItem("ADMIN_TOKEN") || "",
-	);
+	const navigate = useNavigate();
 
 	const [status, setStatus] = useState("pending");
 	const [page, setPage] = useState(1);
@@ -23,32 +19,44 @@ export default function AdminReviews() {
 	// Row locks (prevents double clicks)
 	const [updatingIds, setUpdatingIds] = useState(() => new Set());
 
-	const canAuth = useMemo(() => Boolean(String(token || "").trim()), [token]);
-	const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+	const totalPages = useMemo(
+		() => Math.max(1, Math.ceil(total / LIMIT)),
+		[total],
+	);
 
-	function applyToken() {
-		const clean = String(tokenInput || "").trim();
-		setToken(clean);
-		localStorage.setItem("ADMIN_TOKEN", clean);
-		setPage(1);
-	}
+	// ✅ Guard: must be logged in
+	useEffect(() => {
+		const t = String(getToken() || "").trim();
+		if (!t) navigate("/admin/login");
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-	async function load() {
+	async function load(p = page, s = status) {
 		setLoading(true);
 		setErr("");
 
 		try {
-			const cleanToken = String(token || "").trim();
-			if (!cleanToken) throw new Error("Missing admin token");
+			const t = String(getToken() || "").trim();
+			if (!t) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
 
 			const res = await fetch(
 				`/.netlify/functions/admin-reviews?status=${encodeURIComponent(
-					status,
-				)}&page=${page}&limit=${LIMIT}`,
+					s,
+				)}&page=${p}&limit=${LIMIT}`,
 				{
-					headers: { Authorization: `Bearer ${cleanToken}` },
+					headers: { Authorization: `Bearer ${t}` },
 				},
 			);
+
+			if (res.status === 401) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
 
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok)
@@ -66,19 +74,19 @@ export default function AdminReviews() {
 		}
 	}
 
-	// Load on filter/page/token changes (token changes only when you click Apply)
+	// Load on filter/page changes
 	useEffect(() => {
-		if (!canAuth) return;
-		load();
+		load(page, status);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [status, page, token]);
+	}, [status, page]);
 
 	async function setReviewStatus(reviewId, nextStatus) {
 		setErr("");
 
-		const cleanToken = String(token || "").trim();
-		if (!cleanToken) {
-			setErr("Missing admin token");
+		const t = String(getToken() || "").trim();
+		if (!t) {
+			clearToken();
+			navigate("/admin/login");
 			return;
 		}
 
@@ -100,11 +108,17 @@ export default function AdminReviews() {
 					method: "PATCH",
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${cleanToken}`,
+						Authorization: `Bearer ${t}`,
 					},
 					body: JSON.stringify({ reviewId, status: nextStatus }),
 				},
 			);
+
+			if (res.status === 401) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
 
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok) throw new Error(data.error || "Update failed");
@@ -128,6 +142,11 @@ export default function AdminReviews() {
 		}
 	}
 
+	function logout() {
+		clearToken();
+		navigate("/admin/login");
+	}
+
 	return (
 		<div style={{ maxWidth: 900, margin: "40px auto", padding: "0 18px" }}>
 			<h2 style={{ marginBottom: 10 }}>Reviews</h2>
@@ -139,43 +158,18 @@ export default function AdminReviews() {
 					alignItems: "center",
 					flexWrap: "wrap",
 				}}>
-				<input
-					value={tokenInput}
-					onChange={(e) => setTokenInput(e.target.value)}
-					placeholder="Admin token"
-					style={{
-						padding: "10px 12px",
-						borderRadius: 10,
-						border: "1px solid #ddd",
-						minWidth: 320,
-					}}
-				/>
-
-				<button
-					onClick={applyToken}
-					style={{
-						padding: "10px 14px",
-						borderRadius: 10,
-						border: "1px solid #ddd",
-						background: "white",
-						fontWeight: 800,
-						cursor: "pointer",
-					}}>
-					Apply Token
-				</button>
-
 				<select
 					value={status}
 					onChange={(e) => {
 						setPage(1);
 						setStatus(e.target.value);
 					}}
-					disabled={!canAuth}
 					style={{
 						padding: "10px 12px",
 						borderRadius: 10,
 						border: "1px solid #ddd",
-					}}>
+					}}
+					disabled={loading}>
 					<option value="pending">Pending</option>
 					<option value="approved">Approved</option>
 					<option value="rejected">Rejected</option>
@@ -183,8 +177,8 @@ export default function AdminReviews() {
 				</select>
 
 				<button
-					onClick={load}
-					disabled={!canAuth || loading}
+					onClick={() => load(page, status)}
+					disabled={loading}
 					style={{
 						padding: "10px 14px",
 						borderRadius: 10,
@@ -194,17 +188,25 @@ export default function AdminReviews() {
 						fontWeight: 800,
 						cursor: "pointer",
 					}}>
-					{loading ? "Loading…" : "Load"}
+					{loading ? "Loading…" : "Refresh"}
+				</button>
+
+				<button
+					onClick={logout}
+					disabled={loading}
+					style={{
+						padding: "10px 14px",
+						borderRadius: 10,
+						border: "1px solid #ddd",
+						background: "white",
+						fontWeight: 800,
+						cursor: "pointer",
+					}}>
+					Log out
 				</button>
 
 				{err && <span style={{ color: "crimson" }}>{err}</span>}
 			</div>
-
-			{!canAuth ? (
-				<div style={{ marginTop: 14, color: "#777" }}>
-					Enter your admin token and click <b>Apply Token</b>.
-				</div>
-			) : null}
 
 			<div style={{ marginTop: 18, display: "grid", gap: 12 }}>
 				{items.map((r) => {

@@ -1,42 +1,45 @@
 import { getDb } from "./_db.js";
+import jwt from "jsonwebtoken";
 
-function unauthorized() {
+function json(statusCode, body) {
 	return {
-		statusCode: 401,
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ ok: false, error: "Unauthorized" }),
+		statusCode,
+		headers: {
+			"Content-Type": "application/json",
+			"Cache-Control": "no-store",
+		},
+		body: JSON.stringify(body),
 	};
+}
+
+function requireJwt(event) {
+	const auth =
+		event.headers?.authorization || event.headers?.Authorization || "";
+
+	if (!auth.startsWith("Bearer ")) return null;
+
+	const token = auth.slice(7).trim();
+	if (!token) return null;
+
+	const secret = process.env.ADMIN_JWT_SECRET;
+	if (!secret) return null;
+
+	try {
+		// returns payload if valid
+		return jwt.verify(token, secret);
+	} catch {
+		return null;
+	}
 }
 
 export const handler = async (event) => {
 	try {
 		if (event.httpMethod !== "GET") {
-			return {
-				statusCode: 405,
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					ok: false,
-					error: "Method Not Allowed",
-				}),
-			};
+			return json(405, { ok: false, error: "Method Not Allowed" });
 		}
 
-		const auth =
-			event.headers?.authorization || event.headers?.Authorization || "";
-		const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
-
-		if (!process.env.ADMIN_TOKEN) {
-			return {
-				statusCode: 500,
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					ok: false,
-					error: "Missing ADMIN_TOKEN env var",
-				}),
-			};
-		}
-
-		if (!token || token !== process.env.ADMIN_TOKEN) return unauthorized();
+		const payload = requireJwt(event);
+		if (!payload) return json(401, { ok: false, error: "Unauthorized" });
 
 		const db = await getDb();
 
@@ -61,27 +64,9 @@ export const handler = async (event) => {
 			db.collection("quotes").countDocuments(),
 		]);
 
-		return {
-			statusCode: 200,
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				ok: true,
-				page,
-				limit,
-				total,
-				items,
-			}),
-		};
+		return json(200, { ok: true, page, limit, total, items });
 	} catch (err) {
 		console.error("admin-quotes error:", err);
-		return {
-			statusCode: 500,
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				ok: false,
-				error: err.message || "Server error",
-			}),
-		};
+		return json(500, { ok: false, error: "Server error" });
 	}
 };
-

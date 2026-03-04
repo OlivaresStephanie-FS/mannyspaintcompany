@@ -1,25 +1,39 @@
-import { ObjectId } from "mongodb";
 import { getDb } from "./_db.js";
+import { ObjectId } from "mongodb";
+import jwt from "jsonwebtoken";
 
 function json(statusCode, body) {
 	return {
 		statusCode,
 		headers: {
 			"Content-Type": "application/json",
-			"Cache-Control": "public, max-age=60",
+			// ✅ Admin endpoints should NOT be cached
+			"Cache-Control": "no-store",
 		},
 		body: JSON.stringify(body),
 	};
 }
 
 function isValidBearer(event) {
-	const expected = process.env.ADMIN_TOKEN;
 	const auth =
 		event.headers?.authorization || event.headers?.Authorization || "";
-	if (!expected) return false;
 	if (!auth.startsWith("Bearer ")) return false;
-	return auth.slice("Bearer ".length).trim() === expected;
+
+	const token = auth.slice("Bearer ".length).trim();
+	if (!token) return false;
+
+	const secret = process.env.ADMIN_JWT_SECRET;
+	if (!secret) return false;
+
+	try {
+		jwt.verify(token, secret);
+		return true;
+	} catch {
+		return false;
+	}
 }
+
+const ALLOWED = new Set(["pending", "approved", "rejected"]);
 
 export const handler = async (event) => {
 	try {
@@ -31,37 +45,49 @@ export const handler = async (event) => {
 			return json(401, { ok: false, error: "Unauthorized" });
 		}
 
-		const body = JSON.parse(event.body || "{}");
-		const reviewId = body.reviewId;
-		const nextStatus = String(body.status || "").trim(); // pending | approved | rejected
+		const { reviewId, status } = JSON.parse(event.body || "{}");
 
-		if (!reviewId)
-			return json(400, { ok: false, error: "Missing reviewId" });
-		if (!["pending", "approved", "rejected"].includes(nextStatus)) {
+		if (!reviewId || String(reviewId).length !== 24) {
+			return json(400, { ok: false, error: "Invalid reviewId" });
+		}
+		if (!ALLOWED.has(status)) {
 			return json(400, { ok: false, error: "Invalid status" });
 		}
 
 		const db = await getDb();
-		const col = db.collection("reviews");
+		const _id = new ObjectId(reviewId);
 
-		const update = {
-			$set: {
-				status: nextStatus,
-				updatedAt: new Date(),
-				approvedAt: nextStatus === "approved" ? new Date() : null,
-			},
+		const review = await db.collection("reviews").findOne({ _id });
+		if (!review) return json(404, { ok: false, error: "Review not found" });
+
+		const now = new Date();
+
+		// ✅ single source of truth for moderation timestamps
+		const patch = {
+			status,
+			updatedAt: now,
+			approvedAt: status === "approved" ? now : null,
+			rejectedAt: status === "rejected" ? now : null,
 		};
 
-		const result = await col.updateOne(
-			{ _id: new ObjectId(reviewId) },
-			update,
-		);
+		await db.collection("reviews").updateOne({ _id }, { $set: patch });
 
-		if (result.matchedCount === 0) {
-			return json(404, { ok: false, error: "Review not found" });
+		// ✅ Keep quote snapshot consistent (only if quoteId exists)
+		if (review.quoteId) {
+			await db.collection("quotes").updateOne(
+				{ _id: review.quoteId },
+				{
+					$set: {
+						"review.status": status,
+						"review.moderatedAt": now,
+					},
+				},
+			);
 		}
 
-		return json(200, { ok: true });
+		const updated = await db.collection("reviews").findOne({ _id });
+
+		return json(200, { ok: true, review: updated });
 	} catch (err) {
 		console.error("admin-update-review-status error:", err);
 		return json(500, { ok: false, error: "Server error" });

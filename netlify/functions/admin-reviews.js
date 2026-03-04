@@ -1,20 +1,36 @@
 import { getDb } from "./_db.js";
+import jwt from "jsonwebtoken";
 
 function json(statusCode, body) {
 	return {
 		statusCode,
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			"Cache-Control": "no-store",
+		},
 		body: JSON.stringify(body),
 	};
 }
 
 function isValidBearer(event) {
-	const expected = process.env.ADMIN_TOKEN;
 	const auth =
 		event.headers?.authorization || event.headers?.Authorization || "";
-	if (!expected) return false;
+
 	if (!auth.startsWith("Bearer ")) return false;
-	return auth.slice("Bearer ".length).trim() === expected;
+
+	const token = auth.slice("Bearer ".length).trim();
+	if (!token) return false;
+
+	// ✅ JWT-only
+	const secret = process.env.ADMIN_JWT_SECRET;
+	if (!secret) return false;
+
+	try {
+		jwt.verify(token, secret);
+		return true;
+	} catch {
+		return false;
+	}
 }
 
 export const handler = async (event) => {
