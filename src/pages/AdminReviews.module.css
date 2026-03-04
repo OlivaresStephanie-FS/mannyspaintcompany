@@ -1,0 +1,181 @@
+.page {
+	padding: var(--space-8) 0 64px;
+}
+
+.h2 {
+	margin: 0 0 12px;
+}
+
+.toolbar {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 14px;
+}
+
+/* ✅ Fix “blank” select + match theme */
+.select {
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	background: #fff;
+	color: var(--text);
+	font-size: 14px;
+	font-family: inherit;
+	outline: none;
+}
+
+.select:focus {
+	border-color: #bbb;
+	box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.btn {
+	padding: 10px 14px;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	background: #fff;
+	color: var(--text);
+	font-weight: 800;
+	cursor: pointer;
+}
+
+.btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.btnPrimary {
+	border-color: #111;
+	background: #111;
+	color: #fff;
+}
+
+.btnOutline {
+	background: #fff;
+	color: #111;
+	border: 1px solid #ddd;
+}
+
+.err {
+	color: #b00020;
+	font-size: 13px;
+}
+
+/* list */
+.list {
+	display: grid;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.card {
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	background: #fff;
+	padding: 14px;
+}
+
+.cardBusy {
+	opacity: 0.75;
+}
+
+.topRow {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	align-items: baseline;
+}
+
+.ratingLine {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.status {
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.time {
+	color: var(--muted);
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.text {
+	margin-top: 8px;
+	color: #222;
+	line-height: 1.5;
+}
+
+.noText {
+	color: #888;
+}
+
+.meta {
+	margin-top: 8px;
+	color: #666;
+	font-size: 13px;
+}
+
+.actions {
+	margin-top: 12px;
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.btnSmall {
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	background: #fff;
+	color: #111;
+	font-weight: 800;
+	cursor: pointer;
+}
+
+.btnSmall:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.empty {
+	color: var(--muted);
+	margin-top: 8px;
+}
+
+/* pager */
+.pager {
+	margin-top: 18px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.pageText {
+	color: #555;
+	font-size: 13px;
+}
+
+/* stars */
+.stars {
+	display: flex;
+	gap: 4px;
+	line-height: 1;
+	font-size: 18px;
+}
+
+.starOn {
+	color: #f5b301;
+}
+
+.starOff {
+	color: #d7d7d7;
+}

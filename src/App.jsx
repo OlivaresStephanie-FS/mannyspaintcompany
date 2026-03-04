@@ -1,27 +1,31 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Gallery from "./pages/Gallery";
+import Reviews from "./pages/Reviews";
+import ReviewsSubmit from "./pages/ReviewsSubmit";
+
 import AdminQuotes from "./pages/AdminQuotes";
-import Review from "./components/Review";
 import AdminReviews from "./pages/AdminReviews";
 import AdminLogin from "./pages/AdminLogin";
-import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 export default function App() {
 	return (
 		<BrowserRouter>
 			<Navbar />
-			<main style={{ padding: "24px" }}>
+			<main className="container">
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/gallery" element={<Gallery />} />
-
+					<Route path="/reviews" element={<Reviews />} />
+					<Route
+						path="/review/:quoteId"
+						element={<ReviewsSubmit />}
+					/>
 					<Route path="/admin/login" element={<AdminLogin />} />
 					<Route path="/admin" element={<AdminQuotes />} />
 					<Route path="/admin/reviews" element={<AdminReviews />} />
-
-					<Route path="/review/:quoteId" element={<Review />} />
 				</Routes>
 			</main>
 			<Footer />

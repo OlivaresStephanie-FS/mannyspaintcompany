@@ -1,0 +1,15 @@
+:root {
+    --bg: #ffffff;
+    --text: #111111;
+    --muted: #666666;
+    --border: #eeeeee;
+
+    --container: 1100px;
+
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+
+    --radius: 12px;
+}

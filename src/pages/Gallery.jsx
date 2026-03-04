@@ -1,16 +1,5 @@
 import ProjectCard from "../components/ProjectCard";
-
-const styles = {
-	page: { maxWidth: 1100, margin: "0 auto", padding: "28px 24px" },
-	header: { display: "grid", gap: 8, marginBottom: 18 },
-	h1: { margin: 0, fontSize: 28, color: "#111" },
-	p: { margin: 0, color: "#555", lineHeight: 1.5 },
-	grid: {
-		display: "grid",
-		gap: 16,
-		gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-	},
-};
+import styles from "./Gallery.module.css";
 
 const projects = [
 	{
@@ -50,16 +39,15 @@ const projects = [
 
 export default function Gallery() {
 	return (
-		<div style={styles.page}>
-			<header style={styles.header}>
-				<h1 style={styles.h1}>Project Gallery</h1>
-				<p style={styles.p}>
-					A few before & after examples. Tap the toggle on any card to
-					switch views.
+		<div className={styles.page}>
+			<header className={styles.header}>
+				<h1 className={styles.h1}>Project Gallery</h1>
+				<p className={styles.p}>
+					A few before &amp; after examples. Tap the toggle on any card to switch views.
 				</p>
 			</header>
 
-			<section style={styles.grid}>
+			<section className={styles.grid}>
 				{projects.map((p) => (
 					<ProjectCard key={p.title} {...p} />
 				))}

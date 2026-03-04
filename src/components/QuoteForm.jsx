@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import styles from "./QuoteForm.module.css";
 
 const MAX_FILES = 10;
 const MAX_FILE_SIZE_MB = 10; // per file
@@ -20,107 +21,7 @@ function formatBytes(bytes) {
 	return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
-const styles = {
-	form: {
-		display: "grid",
-		gap: 12,
-		padding: 16,
-		border: "1px solid #eee",
-		borderRadius: 12,
-		background: "white",
-	},
-	row: { display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" },
-	field: { display: "grid", gap: 6 },
-	label: { fontSize: 14, fontWeight: 600, color: "#222" },
-	input: {
-		padding: "10px 12px",
-		borderRadius: 10,
-		border: "1px solid #ddd",
-		outline: "none",
-		fontSize: 14,
-		background: "white",
-		color: "#111",
-		caretColor: "#111",
-	},
-
-	textarea: {
-		padding: "10px 12px",
-		borderRadius: 10,
-		border: "1px solid #ddd",
-		outline: "none",
-		fontSize: 14,
-		minHeight: 110,
-		resize: "vertical",
-		background: "white",
-		color: "#111",
-		caretColor: "#111",
-	},
-	button: {
-		padding: "12px 14px",
-		borderRadius: 10,
-		border: "none",
-		background: "#111",
-		color: "white",
-		fontWeight: 700,
-		cursor: "pointer",
-	},
-	hint: { fontSize: 13, color: "#666" },
-	error: {
-		fontSize: 13,
-		color: "#b00020",
-		background: "#fff5f5",
-		border: "1px solid #ffd6d6",
-		padding: "10px 12px",
-		borderRadius: 10,
-	},
-	uploadBox: {
-		border: "1px dashed #cfcfcf",
-		borderRadius: 12,
-		padding: 14,
-		background: "#fafafa",
-		display: "grid",
-		gap: 10,
-	},
-	uploadActions: {
-		display: "flex",
-		gap: 10,
-		flexWrap: "wrap",
-		alignItems: "center",
-	},
-	uploadBtn: {
-		padding: "10px 12px",
-		borderRadius: 10,
-		border: "1px solid #ddd",
-		background: "white",
-		fontWeight: 700,
-		cursor: "pointer",
-	},
-	fileList: { display: "grid", gap: 8, marginTop: 4 },
-	fileRow: {
-		display: "grid",
-		gridTemplateColumns: "1fr auto",
-		gap: 10,
-		alignItems: "center",
-		padding: "10px 12px",
-		border: "1px solid #eee",
-		borderRadius: 10,
-		background: "white",
-	},
-	fileMeta: { display: "grid", gap: 2 },
-	fileName: { fontSize: 14, fontWeight: 700, color: "#222" },
-	fileSub: { fontSize: 12, color: "#666" },
-	removeBtn: {
-		padding: "8px 10px",
-		borderRadius: 10,
-		border: "1px solid #ddd",
-		background: "white",
-		cursor: "pointer",
-		fontWeight: 700,
-	},
-};
-
 async function uploadToCloudinary(file) {
-	// 1) Ask your Netlify function for signature + upload params
 	const signRes = await fetch("/api/cloudinary-sign", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
@@ -134,7 +35,6 @@ async function uploadToCloudinary(file) {
 
 	const { cloudName, apiKey, timestamp, folder, signature } = signData;
 
-	// 2) Upload directly to Cloudinary with signed parameters
 	const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
 
 	const formData = new FormData();
@@ -152,13 +52,10 @@ async function uploadToCloudinary(file) {
 		throw new Error(data?.error?.message || "Cloudinary upload failed");
 	}
 
-	// Build a thumbnail URL from public_id (NO extra upload)
 	const publicId = data.public_id;
 	const version = data.version;
-	const resourceType = data.resource_type; // "image" or "raw" (pdf often becomes raw)
+	const resourceType = data.resource_type;
 
-	// For images: use image/upload + transformations
-	// For PDFs: we still use image/upload with pg_1 + f_jpg to preview page 1
 	const thumbTransforms =
 		file.type === "application/pdf"
 			? "f_jpg,pg_1,w_420,h_420,c_fill,q_auto"
@@ -175,10 +72,11 @@ async function uploadToCloudinary(file) {
 		originalFilename: data.original_filename || file.name,
 		version,
 		thumbUrl,
-		width: data.width || 0, 
+		width: data.width || 0,
 		height: data.height || 0,
 	};
 }
+
 export default function QuoteForm() {
 	const [form, setForm] = useState({
 		name: "",
@@ -241,7 +139,6 @@ export default function QuoteForm() {
 		if (errs.length) setError(errs.join(" "));
 		if (valid.length) setFiles((prev) => [...prev, ...valid]);
 
-		// allow re-selecting the same file later if removed
 		e.target.value = "";
 	}
 
@@ -259,20 +156,18 @@ export default function QuoteForm() {
 		setError("");
 
 		try {
-			// 1) Upload files to Cloudinary (optional)
 			const uploads = [];
 			for (const file of files) {
 				const uploaded = await uploadToCloudinary(file);
 				uploads.push(uploaded);
 			}
 
-			// 2) Send quote + uploads to your Netlify function
 			const payload = {
 				...form,
-				uploads, // ✅ matches your quote.js
+				uploads,
 				submittedAt: new Date().toISOString(),
 			};
-			console.log("payload going to /api/quote:", payload);
+
 			const res = await fetch("/api/quote", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -290,7 +185,6 @@ export default function QuoteForm() {
 
 			alert("Quote request sent successfully!");
 
-			// 3) Reset form after alert is closed
 			setForm({
 				name: "",
 				phone: "",
@@ -307,24 +201,25 @@ export default function QuoteForm() {
 	}
 
 	return (
-		<form style={styles.form} onSubmit={onSubmit}>
-			{error ? <div style={styles.error}>{error}</div> : null}
+		<form className={styles.form} onSubmit={onSubmit}>
+			{error ? <div className={styles.error}>{error}</div> : null}
 
-			<div style={styles.row}>
-				<div style={styles.field}>
-					<label style={styles.label}>Full Name</label>
+			<div className={styles.row}>
+				<div className={styles.field}>
+					<label className={styles.label}>Full Name</label>
 					<input
-						style={styles.input}
+						className={styles.input}
 						value={form.name}
 						onChange={(e) => update("name", e.target.value)}
 						placeholder="Jane Doe"
 						required
 					/>
 				</div>
-				<div style={styles.field}>
-					<label style={styles.label}>Phone</label>
+
+				<div className={styles.field}>
+					<label className={styles.label}>Phone</label>
 					<input
-						style={styles.input}
+						className={styles.input}
 						value={form.phone}
 						onChange={(e) => update("phone", e.target.value)}
 						placeholder="(555) 555-5555"
@@ -333,21 +228,22 @@ export default function QuoteForm() {
 				</div>
 			</div>
 
-			<div style={styles.row}>
-				<div style={styles.field}>
-					<label style={styles.label}>Email</label>
+			<div className={styles.row}>
+				<div className={styles.field}>
+					<label className={styles.label}>Email</label>
 					<input
-						style={styles.input}
+						className={styles.input}
 						type="email"
 						value={form.email}
 						onChange={(e) => update("email", e.target.value)}
 						placeholder="you@email.com"
 					/>
 				</div>
-				<div style={styles.field}>
-					<label style={styles.label}>Service</label>
+
+				<div className={styles.field}>
+					<label className={styles.label}>Service</label>
 					<select
-						style={styles.input}
+						className={styles.select}
 						value={form.service}
 						onChange={(e) => update("service", e.target.value)}>
 						<option>Painting</option>
@@ -359,38 +255,41 @@ export default function QuoteForm() {
 				</div>
 			</div>
 
-			<div style={styles.field}>
-				<label style={styles.label}>Project details</label>
+			<div className={styles.field}>
+				<label className={styles.label}>Project details</label>
 				<textarea
-					style={styles.textarea}
+					className={styles.textarea}
 					value={form.description}
 					onChange={(e) => update("description", e.target.value)}
 					placeholder="Tell us what you need done, where, and any timelines..."
 					required
 				/>
-				<div style={styles.hint}>
+				<div className={styles.hint}>
 					Tip: Include room count, approximate square footage, and
 					desired timeline.
 				</div>
 			</div>
 
-			<div style={styles.field}>
-				<label style={styles.label}>Upload photos / documents</label>
+			<div className={styles.field}>
+				<label className={styles.label}>
+					Upload photos / documents
+				</label>
 
-				<div style={styles.uploadBox}>
-					<div style={styles.hint}>
+				<div className={styles.uploadBox}>
+					<div className={styles.hint}>
 						Add up to {MAX_FILES} files. Allowed: JPG, PNG, WEBP,
 						PDF. Max {MAX_FILE_SIZE_MB}MB each.
 					</div>
 
-					<div style={styles.uploadActions}>
+					<div className={styles.uploadActions}>
 						<button
 							type="button"
-							style={styles.uploadBtn}
+							className={styles.uploadBtn}
 							onClick={openFilePicker}>
 							Choose files
 						</button>
-						<div style={styles.hint}>
+
+						<div className={styles.hint}>
 							{files.length
 								? `${files.length} file(s) selected`
 								: "No files selected yet"}
@@ -403,27 +302,28 @@ export default function QuoteForm() {
 						multiple
 						accept=".jpg,.jpeg,.png,.webp,.pdf"
 						onChange={onPickFiles}
-						style={{ display: "none" }}
+						className={styles.hiddenInput}
 					/>
 
 					{files.length ? (
-						<div style={styles.fileList}>
+						<div className={styles.fileList}>
 							{files.map((f, idx) => (
 								<div
 									key={`${f.name}-${f.size}-${idx}`}
-									style={styles.fileRow}>
-									<div style={styles.fileMeta}>
-										<div style={styles.fileName}>
+									className={styles.fileRow}>
+									<div className={styles.fileMeta}>
+										<div className={styles.fileName}>
 											{f.name}
 										</div>
-										<div style={styles.fileSub}>
+										<div className={styles.fileSub}>
 											{f.type || "file"} •{" "}
 											{formatBytes(f.size)}
 										</div>
 									</div>
+
 									<button
 										type="button"
-										style={styles.removeBtn}
+										className={styles.removeBtn}
 										onClick={() => removeFile(idx)}>
 										Remove
 									</button>
@@ -434,7 +334,7 @@ export default function QuoteForm() {
 				</div>
 			</div>
 
-			<button style={styles.button} type="submit">
+			<button className={styles.button} type="submit">
 				Request a Quote
 			</button>
 		</form>

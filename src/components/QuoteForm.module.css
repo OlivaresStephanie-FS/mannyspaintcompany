@@ -1,0 +1,167 @@
+.form {
+	display: grid;
+	gap: 12px;
+	padding: 16px;
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	background: #fff;
+}
+
+.row {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: 1fr 1fr;
+}
+
+.field {
+	display: grid;
+	gap: 6px;
+}
+
+.label {
+	font-size: 14px;
+	font-weight: 600;
+	color: #222;
+}
+
+.input,
+.select,
+.textarea {
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	outline: none;
+	font-size: 14px;
+	background: #fff;
+	color: #111;
+	caret-color: #111;
+	font-family: inherit;
+}
+
+.textarea {
+	min-height: 110px;
+	resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+	border-color: #bbb;
+	box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.button {
+	padding: 12px 14px;
+	border-radius: 10px;
+	border: none;
+	background: #111;
+	color: #fff;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.button:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.hint {
+	font-size: 13px;
+	color: var(--muted);
+}
+
+.error {
+	font-size: 13px;
+	color: #b00020;
+	background: #fff5f5;
+	border: 1px solid #ffd6d6;
+	padding: 10px 12px;
+	border-radius: 10px;
+}
+
+.uploadBox {
+	border: 1px dashed #cfcfcf;
+	border-radius: 12px;
+	padding: 14px;
+	background: #fafafa;
+	display: grid;
+	gap: 10px;
+}
+
+.uploadActions {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.uploadBtn {
+	all: unset;
+	box-sizing: border-box;
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	background: #fff;
+	font-weight: 700;
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.fileList {
+	display: grid;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+.fileRow {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 10px;
+	align-items: center;
+	padding: 10px 12px;
+	border: 1px solid #eee;
+	border-radius: 10px;
+	background: #fff;
+}
+
+.fileMeta {
+	display: grid;
+	gap: 2px;
+	min-width: 0;
+}
+
+.fileName {
+	font-size: 14px;
+	font-weight: 700;
+	color: #222;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.fileSub {
+	font-size: 12px;
+	color: var(--muted);
+}
+
+.removeBtn {
+	all: unset;
+	box-sizing: border-box;
+	padding: 8px 10px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	background: #fff;
+	cursor: pointer;
+	font-weight: 700;
+}
+
+.hiddenInput {
+	display: none;
+}
+
+@media (max-width: 720px) {
+	.row {
+		grid-template-columns: 1fr;
+	}
+}

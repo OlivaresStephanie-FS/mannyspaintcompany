@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { setToken } from "../lib/adminAuth";
+import styles from "./AdminLogin.module.css";
 
 export default function AdminLogin() {
 	const [username, setUsername] = useState("");
@@ -22,18 +23,10 @@ export default function AdminLogin() {
 			});
 
 			const data = await res.json().catch(() => ({}));
-			if (!res.ok) {
-				throw new Error(data.error || "Login failed");
-			}
+			if (!res.ok) throw new Error(data.error || "Login failed");
+			if (!data.token) throw new Error("Missing token");
 
-			if (!data.token) {
-				throw new Error("Missing token");
-			}
-
-			// ✅ save JWT (ADMIN_JWT)
 			setToken(data.token);
-
-			// ✅ go to admin
 			navigate("/admin/reviews");
 		} catch (err) {
 			setError(err?.message || "Login failed");
@@ -43,34 +36,41 @@ export default function AdminLogin() {
 	}
 
 	return (
-		<div className="admin-login">
-			<h2>Admin Login</h2>
+		<div className={styles.page}>
+			<div className={styles.card}>
+				<h2 className={styles.h2}>Admin Login</h2>
 
-			<form onSubmit={handleLogin}>
-				<input
-					type="text"
-					placeholder="Username"
-					value={username}
-					onChange={(e) => setUsername(e.target.value)}
-					autoComplete="username"
-					required
-				/>
+				<form className={styles.form} onSubmit={handleLogin}>
+					<input
+						className={styles.input}
+						type="text"
+						placeholder="Username"
+						value={username}
+						onChange={(e) => setUsername(e.target.value)}
+						autoComplete="username"
+						required
+					/>
 
-				<input
-					type="password"
-					placeholder="Password"
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-					autoComplete="current-password"
-					required
-				/>
+					<input
+						className={styles.input}
+						type="password"
+						placeholder="Password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						autoComplete="current-password"
+						required
+					/>
 
-				<button type="submit" disabled={loading}>
-					{loading ? "Signing in..." : "Login"}
-				</button>
-			</form>
+					<button
+						className={styles.btn}
+						type="submit"
+						disabled={loading}>
+						{loading ? "Signing in..." : "Login"}
+					</button>
+				</form>
 
-			{error && <p style={{ color: "red" }}>{error}</p>}
+				{error && <div className={styles.error}>{error}</div>}
+			</div>
 		</div>
 	);
 }

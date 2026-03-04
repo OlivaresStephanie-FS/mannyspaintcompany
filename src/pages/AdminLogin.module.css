@@ -1,0 +1,62 @@
+.page {
+	padding: var(--space-8) 0 64px;
+}
+
+.card {
+	max-width: 520px;
+	margin: 0 auto;
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	background: #fff;
+	padding: 18px;
+}
+
+.h2 {
+	margin: 0 0 12px;
+}
+
+.form {
+	display: grid;
+	gap: 12px;
+}
+
+.input {
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	background: #fff;
+	font-size: 14px;
+	font-family: inherit;
+	outline: none;
+    color: #111;
+    caret-color: #111;
+}
+
+.input:focus {
+	border-color: #bbb;
+	box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.btn {
+	padding: 12px 14px;
+	border-radius: 10px;
+	border: 1px solid #111;
+	background: #111;
+	color: #fff;
+	font-weight: 800;
+	cursor: pointer;
+}
+
+.btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.error {
+	border: 1px solid #ffb6b6;
+	background: #ffe9e9;
+	color: #7a0000;
+	border-radius: 12px;
+	padding: 10px 12px;
+	font-size: 13px;
+}

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { getToken, clearToken } from "../lib/adminAuth";
 import { useNavigate } from "react-router-dom";
+import styles from "./AdminReviews.module.css";
 
 const LIMIT = 10;
 
 export default function AdminReviews() {
 	const navigate = useNavigate();
 
-	const [status, setStatus] = useState("pending");
+	const [status, setStatus] = useState("pending"); 
 	const [page, setPage] = useState(1);
 
 	const [items, setItems] = useState([]);
@@ -16,7 +17,6 @@ export default function AdminReviews() {
 	const [loading, setLoading] = useState(false);
 	const [err, setErr] = useState("");
 
-	// Row locks (prevents double clicks)
 	const [updatingIds, setUpdatingIds] = useState(() => new Set());
 
 	const totalPages = useMemo(
@@ -24,7 +24,6 @@ export default function AdminReviews() {
 		[total],
 	);
 
-	// ✅ Guard: must be logged in
 	useEffect(() => {
 		const t = String(getToken() || "").trim();
 		if (!t) navigate("/admin/login");
@@ -47,9 +46,7 @@ export default function AdminReviews() {
 				`/.netlify/functions/admin-reviews?status=${encodeURIComponent(
 					s,
 				)}&page=${p}&limit=${LIMIT}`,
-				{
-					headers: { Authorization: `Bearer ${t}` },
-				},
+				{ headers: { Authorization: `Bearer ${t}` } },
 			);
 
 			if (res.status === 401) {
@@ -74,7 +71,6 @@ export default function AdminReviews() {
 		}
 	}
 
-	// Load on filter/page changes
 	useEffect(() => {
 		load(page, status);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,7 +86,6 @@ export default function AdminReviews() {
 			return;
 		}
 
-		// 1) Optimistic UI
 		const prev = items;
 		setItems((cur) =>
 			cur.map((r) =>
@@ -98,7 +93,6 @@ export default function AdminReviews() {
 			),
 		);
 
-		// 2) Lock row
 		setUpdatingIds((s) => new Set(s).add(reviewId));
 
 		try {
@@ -123,14 +117,12 @@ export default function AdminReviews() {
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok) throw new Error(data.error || "Update failed");
 
-			// 3) Use returned review (if provided)
 			if (data.review?._id) {
 				setItems((cur) =>
 					cur.map((r) => (r._id === reviewId ? data.review : r)),
 				);
 			}
 		} catch (e) {
-			// 4) Rollback
 			setItems(prev);
 			setErr(e?.message || "Error");
 		} finally {
@@ -148,27 +140,17 @@ export default function AdminReviews() {
 	}
 
 	return (
-		<div style={{ maxWidth: 900, margin: "40px auto", padding: "0 18px" }}>
-			<h2 style={{ marginBottom: 10 }}>Reviews</h2>
+		<div className={styles.page}>
+			<h2 className={styles.h2}>Reviews</h2>
 
-			<div
-				style={{
-					display: "flex",
-					gap: 10,
-					alignItems: "center",
-					flexWrap: "wrap",
-				}}>
+			<div className={styles.toolbar}>
 				<select
 					value={status}
 					onChange={(e) => {
 						setPage(1);
 						setStatus(e.target.value);
 					}}
-					style={{
-						padding: "10px 12px",
-						borderRadius: 10,
-						border: "1px solid #ddd",
-					}}
+					className={styles.select}
 					disabled={loading}>
 					<option value="pending">Pending</option>
 					<option value="approved">Approved</option>
@@ -179,65 +161,39 @@ export default function AdminReviews() {
 				<button
 					onClick={() => load(page, status)}
 					disabled={loading}
-					style={{
-						padding: "10px 14px",
-						borderRadius: 10,
-						border: "none",
-						background: "#111",
-						color: "white",
-						fontWeight: 800,
-						cursor: "pointer",
-					}}>
+					className={`${styles.btn} ${styles.btnPrimary}`}
+					type="button">
 					{loading ? "Loading…" : "Refresh"}
 				</button>
 
 				<button
 					onClick={logout}
 					disabled={loading}
-					style={{
-						padding: "10px 14px",
-						borderRadius: 10,
-						border: "1px solid #ddd",
-						background: "white",
-						fontWeight: 800,
-						cursor: "pointer",
-					}}>
+					className={`${styles.btn} ${styles.btnOutline}`}
+					type="button">
 					Log out
 				</button>
 
-				{err && <span style={{ color: "crimson" }}>{err}</span>}
+				{err && <span className={styles.err}>{err}</span>}
 			</div>
 
-			<div style={{ marginTop: 18, display: "grid", gap: 12 }}>
+			<div className={styles.list}>
 				{items.map((r) => {
 					const busy = updatingIds.has(r._id);
 
 					return (
 						<div
 							key={r._id}
-							style={{
-								border: "1px solid #eee",
-								borderRadius: 12,
-								padding: 14,
-								background: "#fff",
-								opacity: busy ? 0.7 : 1,
-							}}>
-							<div
-								style={{
-									display: "flex",
-									justifyContent: "space-between",
-								}}>
-								<div style={{ fontWeight: 700 }}>
-									{renderStars(Number(r.rating || 0))}{" "}
-									<span
-										style={{
-											color: "#777",
-											fontWeight: 400,
-										}}>
+							className={`${styles.card} ${busy ? styles.cardBusy : ""}`}>
+							<div className={styles.topRow}>
+								<div className={styles.ratingLine}>
+									<Stars n={Number(r.rating || 0)} />
+									<span className={styles.status}>
 										({r.status})
 									</span>
 								</div>
-								<div style={{ color: "#777", fontSize: 12 }}>
+
+								<div className={styles.time}>
 									{r.submittedAt
 										? new Date(
 												r.submittedAt,
@@ -246,51 +202,49 @@ export default function AdminReviews() {
 								</div>
 							</div>
 
-							<div style={{ marginTop: 8, color: "#222" }}>
+							<div className={styles.text}>
 								{r.text ? (
 									r.text
 								) : (
-									<span style={{ color: "#888" }}>
+									<span className={styles.noText}>
 										(no text)
 									</span>
 								)}
 							</div>
 
-							<div
-								style={{
-									marginTop: 8,
-									color: "#555",
-									fontSize: 13,
-								}}>
+							<div className={styles.meta}>
 								— {r.name || "Anonymous"}{" "}
 								{r.service ? `• ${r.service}` : ""}
 							</div>
 
-							<div
-								style={{
-									marginTop: 12,
-									display: "flex",
-									gap: 10,
-								}}>
+							<div className={styles.actions}>
 								<button
 									onClick={() =>
 										setReviewStatus(r._id, "approved")
 									}
-									disabled={busy || r.status === "approved"}>
+									disabled={busy || r.status === "approved"}
+									className={styles.btnSmall}
+									type="button">
 									{busy ? "Saving…" : "Approve"}
 								</button>
+
 								<button
 									onClick={() =>
 										setReviewStatus(r._id, "rejected")
 									}
-									disabled={busy || r.status === "rejected"}>
+									disabled={busy || r.status === "rejected"}
+									className={styles.btnSmall}
+									type="button">
 									Reject
 								</button>
+
 								<button
 									onClick={() =>
 										setReviewStatus(r._id, "pending")
 									}
-									disabled={busy || r.status === "pending"}>
+									disabled={busy || r.status === "pending"}
+									className={styles.btnSmall}
+									type="button">
 									Set Pending
 								</button>
 							</div>
@@ -299,30 +253,28 @@ export default function AdminReviews() {
 				})}
 
 				{!loading && items.length === 0 && (
-					<div style={{ color: "#777" }}>No reviews found.</div>
+					<div className={styles.empty}>No reviews found.</div>
 				)}
 			</div>
 
-			<div
-				style={{
-					marginTop: 18,
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-				}}>
+			<div className={styles.pager}>
 				<button
 					onClick={() => setPage((p) => Math.max(1, p - 1))}
-					disabled={page <= 1 || loading}>
+					disabled={page <= 1 || loading}
+					className={styles.btnSmall}
+					type="button">
 					Prev
 				</button>
 
-				<div style={{ color: "#555" }}>
+				<div className={styles.pageText}>
 					Page {page} / {totalPages}
 				</div>
 
 				<button
 					onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-					disabled={page >= totalPages || loading}>
+					disabled={page >= totalPages || loading}
+					className={styles.btnSmall}
+					type="button">
 					Next
 				</button>
 			</div>
@@ -330,14 +282,15 @@ export default function AdminReviews() {
 	);
 }
 
-function renderStars(n) {
-	const v = Math.max(0, Math.min(5, Number(n) || 0));
-	const filled = "★".repeat(v);
-	const empty = "☆".repeat(5 - v);
+function Stars({ n }) {
+	const rating = Math.max(0, Math.min(5, Number(n || 0)));
+	const filled = "★".repeat(rating);
+	const empty = "☆".repeat(5 - rating);
+
 	return (
-		<span style={{ color: "#f5b301", fontSize: 18 }}>
-			{filled}
-			<span style={{ color: "#ccc" }}>{empty}</span>
-		</span>
+		<div className={styles.stars} aria-label={`${rating} out of 5 stars`}>
+			<span className={styles.starOn}>{filled}</span>
+			<span className={styles.starOff}>{empty}</span>
+		</div>
 	);
 }

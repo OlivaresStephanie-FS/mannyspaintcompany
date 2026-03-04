@@ -83,8 +83,6 @@ export const handler = async (event) => {
 			return json(400, { ok: false, error: "Review already submitted" });
 		}
 
-		const now = new Date();
-
 		// Create review doc (source of truth)
 		const reviewDoc = {
 			quoteId: _id,

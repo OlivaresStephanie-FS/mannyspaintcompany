@@ -1,104 +1,6 @@
 import { useEffect, useState } from "react";
 import QuoteForm from "../components/QuoteForm";
-
-const styles = {
-	page: { maxWidth: 1100, margin: "0 auto", padding: "28px 24px" },
-	hero: {
-		display: "grid",
-		gridTemplateColumns: "1.15fr 0.85fr",
-		gap: 20,
-		alignItems: "start",
-		padding: 18,
-		background: "#fafafa",
-		border: "1px solid #eee",
-		borderRadius: 16,
-	},
-	h1: { fontSize: 40, lineHeight: 1.05, margin: 0, color: "#111" },
-	p: {
-		marginTop: 12,
-		marginBottom: 0,
-		color: "#555",
-		fontSize: 16,
-		lineHeight: 1.5,
-	},
-	ctas: { display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" },
-	btnPrimary: {
-		padding: "12px 14px",
-		borderRadius: 10,
-		border: "none",
-		background: "#111",
-		color: "white",
-		fontWeight: 700,
-		cursor: "pointer",
-		textDecoration: "none",
-		display: "inline-flex",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	btnGhost: {
-		padding: "12px 14px",
-		borderRadius: 10,
-		border: "1px solid #ddd",
-		background: "white",
-		color: "#111",
-		fontWeight: 700,
-		cursor: "pointer",
-		textDecoration: "none",
-		display: "inline-flex",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	section: { marginTop: 28 },
-	sectionTitle: { margin: "0 0 10px 0", fontSize: 18, color: "#111" },
-	services: {
-		display: "grid",
-		gridTemplateColumns: "repeat(3, 1fr)",
-		gap: 12,
-	},
-	card: {
-		padding: 14,
-		borderRadius: 14,
-		border: "1px solid #eee",
-		background: "white",
-	},
-	cardTitle: { margin: 0, fontWeight: 800, color: "#111" },
-	cardText: {
-		marginTop: 6,
-		marginBottom: 0,
-		color: "#555",
-		fontSize: 14,
-		lineHeight: 1.45,
-	},
-	quoteGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 },
-	small: { color: "#666", fontSize: 14, lineHeight: 1.5 },
-
-	// --- Reviews styles ---
-	reviewsGrid: {
-		display: "grid",
-		gridTemplateColumns: "repeat(3, 1fr)",
-		gap: 12,
-	},
-	reviewCard: {
-		padding: 14,
-		borderRadius: 14,
-		border: "1px solid #eee",
-		background: "white",
-	},
-	reviewText: {
-		marginTop: 8,
-		marginBottom: 0,
-		color: "#222",
-		lineHeight: 1.5,
-		fontSize: 14,
-		whiteSpace: "pre-wrap",
-	},
-	reviewMeta: {
-		marginTop: 10,
-		color: "#666",
-		fontSize: 13,
-	},
-	stars: { fontSize: 18, letterSpacing: 1 },
-};
+import styles from "./Home.module.css";
 
 function Stars({ n }) {
 	const rating = Math.max(0, Math.min(5, Number(n || 0)));
@@ -106,9 +8,9 @@ function Stars({ n }) {
 	const empty = "☆".repeat(5 - rating);
 
 	return (
-		<div style={styles.stars} aria-label={`${rating} out of 5 stars`}>
-			<span style={{ color: "#f5b301" }}>{filled}</span>
-			<span style={{ color: "#ccc" }}>{empty}</span>
+		<div className={styles.stars} aria-label={`${rating} out of 5 stars`}>
+			<span className={styles.starOn}>{filled}</span>
+			<span className={styles.starOff}>{empty}</span>
 		</div>
 	);
 }
@@ -146,24 +48,25 @@ function ReviewsSection() {
 	if (!items.length) return null;
 
 	return (
-		<section style={styles.section}>
-			<h2 style={styles.sectionTitle}>Customer Reviews</h2>
-			<div style={styles.reviewsGrid}>
+		<section className={styles.section}>
+			<h2 className={styles.sectionTitle}>Customer Reviews</h2>
+
+			<div className={styles.reviewsGrid}>
 				{items.map((r) => (
 					<div
 						key={r._id || `${r.submittedAt}-${Math.random()}`}
-						style={styles.reviewCard}>
+						className={styles.reviewCard}>
 						<Stars n={r.rating} />
-						<p style={styles.reviewText}>
+						<p className={styles.reviewText}>
 							{r.text ? (
 								r.text
 							) : (
-								<span style={{ color: "#888" }}>
+								<span className={styles.reviewEmpty}>
 									(No comment)
 								</span>
 							)}
 						</p>
-						<div style={styles.reviewMeta}>
+						<div className={styles.reviewMeta}>
 							— {r.name || "Anonymous"}{" "}
 							{r.service ? `• ${r.service}` : ""}
 						</div>
@@ -181,52 +84,48 @@ export default function Home() {
 	}
 
 	return (
-		<div style={styles.page}>
+		<div className={styles.page}>
 			{/* HERO */}
-			<section style={styles.hero}>
+			<section className={styles.hero}>
 				<div>
-					<h1 style={styles.h1}>
-						High-quality painting & renovation work—done clean.
+					<h1 className={styles.h1}>
+						High-quality painting &amp; renovation work—done clean.
 					</h1>
-					<p style={styles.p}>
+					<p className={styles.p}>
 						Interior painting, patching, trim, doors, and refresh
 						projects. Share a few details and photos and we’ll send
 						a fast quote.
 					</p>
 
-					<div style={styles.ctas}>
+					<div className={styles.ctas}>
 						<button
-							style={styles.btnPrimary}
+							className={styles.btnPrimary}
 							onClick={scrollToQuote}>
 							Request a Quote
 						</button>
-						<a style={styles.btnGhost} href="/gallery">
+						<a className={styles.btnGhost} href="/gallery">
 							View Gallery
 						</a>
 					</div>
 
-					<p style={{ ...styles.small, marginTop: 14 }}>
-						Serving NYC / NJ • Flexible scheduling • Clear scope &
-						pricing
+					<p className={`${styles.small} ${styles.heroNote}`}>
+						Serving NYC / NJ • Flexible scheduling • Clear scope
+						&amp; pricing
 					</p>
 				</div>
 
 				<div>
-					<div style={{ ...styles.card, background: "white" }}>
-						<div
-							style={{
-								fontWeight: 800,
-								color: "#111",
-								marginBottom: 6,
-							}}>
+					<div className={`${styles.card} ${styles.contactCard}`}>
+						<div className={styles.cardTitleStrong}>
 							Quick Contact
 						</div>
-						<div style={styles.small}>
+						<div className={styles.small}>
 							Phone: (917) 326-1720 <br />
 							Email: manuelico11@gmail.com <br />
 							Hours: Mon–Sat
 						</div>
-						<div style={{ ...styles.small, marginTop: 10 }}>
+						<div
+							className={`${styles.small} ${styles.contactHint}`}>
 							Replace these placeholders with your real business
 							info.
 						</div>
@@ -235,24 +134,31 @@ export default function Home() {
 			</section>
 
 			{/* SERVICES */}
-			<section style={styles.section}>
-				<h2 style={styles.sectionTitle}>Services</h2>
-				<div style={styles.services}>
-					<div style={styles.card}>
-						<p style={styles.cardTitle}>Interior Painting</p>
-						<p style={styles.cardText}>
+			<section className={styles.section}>
+				<h2 className={styles.sectionTitle}>Services</h2>
+
+				<div className={styles.services}>
+					<div className={styles.card}>
+						<p className={styles.cardTitle}>Interior Painting</p>
+						<p className={styles.cardText}>
 							Walls, ceilings, closets, and crisp cut-lines.
 						</p>
 					</div>
-					<div style={styles.card}>
-						<p style={styles.cardTitle}>Patching & Repair</p>
-						<p style={styles.cardText}>
-							Holes, cracks, water stains, smoothing & prep.
+
+					<div className={styles.card}>
+						<p className={styles.cardTitle}>
+							Patching &amp; Repair
+						</p>
+						<p className={styles.cardText}>
+							Holes, cracks, water stains, smoothing &amp; prep.
 						</p>
 					</div>
-					<div style={styles.card}>
-						<p style={styles.cardTitle}>Trim, Doors & Baseboards</p>
-						<p style={styles.cardText}>
+
+					<div className={styles.card}>
+						<p className={styles.cardTitle}>
+							Trim, Doors &amp; Baseboards
+						</p>
+						<p className={styles.cardText}>
 							Sanding, priming, and durable finishes.
 						</p>
 					</div>
@@ -260,16 +166,17 @@ export default function Home() {
 			</section>
 
 			{/* QUOTE */}
-			<section id="quote" style={styles.section}>
-				<h2 style={styles.sectionTitle}>Request a Quote</h2>
-				<div style={styles.quoteGrid}>
+			<section id="quote" className={styles.section}>
+				<h2 className={styles.sectionTitle}>Request a Quote</h2>
+
+				<div className={styles.quoteGrid}>
 					<div>
-						<p style={styles.small}>
+						<p className={styles.small}>
 							Tell us what you need done. In the next step we’ll
 							add the ability to upload before photos and
 							documents so quotes are faster and more accurate.
 						</p>
-						<ul style={{ ...styles.small, marginTop: 10 }}>
+						<ul className={`${styles.small} ${styles.bullets}`}>
 							<li>Include rooms / square footage (if known)</li>
 							<li>
 								Mention any repairs needed (patching, water
@@ -278,6 +185,7 @@ export default function Home() {
 							<li>Share your timeline</li>
 						</ul>
 					</div>
+
 					<QuoteForm />
 				</div>
 			</section>

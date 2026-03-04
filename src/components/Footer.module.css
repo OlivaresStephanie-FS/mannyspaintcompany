@@ -1,0 +1,24 @@
+.wrap {
+	border-top: 1px solid var(--border);
+	background: #fff;
+	margin-top: 48px;
+}
+
+.inner {
+	padding: 24px 0;
+	color: var(--muted);
+	font-size: 14px;
+}
+
+.title {
+	font-weight: 800;
+	color: var(--text);
+}
+
+.line {
+	margin-top: 6px;
+}
+
+.copy {
+	margin-top: 12px;
+}

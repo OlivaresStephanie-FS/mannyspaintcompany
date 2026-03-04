@@ -1,0 +1,199 @@
+.page {
+	padding: var(--space-8) 0 64px;
+}
+
+.hero {
+	display: grid;
+	grid-template-columns: 1.15fr 0.85fr;
+	gap: 20px;
+	align-items: start;
+	padding: 18px;
+	background: #fafafa;
+	border: 1px solid var(--border);
+	border-radius: 16px;
+}
+
+.h1 {
+	font-size: 40px;
+	line-height: 1.05;
+	margin: 0;
+	color: var(--text);
+	letter-spacing: -0.6px;
+}
+
+.p {
+	margin-top: 12px;
+	margin-bottom: 0;
+	color: #555;
+	font-size: 16px;
+	line-height: 1.5;
+}
+
+.ctas {
+	display: flex;
+	gap: 10px;
+	margin-top: 16px;
+	flex-wrap: wrap;
+}
+
+.btnPrimary {
+	padding: 12px 14px;
+	border-radius: 10px;
+	border: none;
+	background: #111;
+	color: #fff;
+	font-weight: 700;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.btnGhost {
+	padding: 12px 14px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	background: #fff;
+	color: #111;
+	font-weight: 700;
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.section {
+	margin-top: 28px;
+}
+
+.sectionTitle {
+	margin: 0 0 10px 0;
+	font-size: 18px;
+	color: var(--text);
+}
+
+.services {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+}
+
+.card {
+	padding: 14px;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: #fff;
+}
+
+.contactCard {
+	background: #fff;
+}
+
+.cardTitleStrong {
+	font-weight: 800;
+	color: var(--text);
+	margin-bottom: 6px;
+}
+
+.cardTitle {
+	margin: 0;
+	font-weight: 800;
+	color: var(--text);
+}
+
+.cardText {
+	margin-top: 6px;
+	margin-bottom: 0;
+	color: #555;
+	font-size: 14px;
+	line-height: 1.45;
+}
+
+.small {
+	color: var(--muted);
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.heroNote {
+	margin-top: 14px;
+}
+
+.contactHint {
+	margin-top: 10px;
+}
+
+.quoteGrid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 18px;
+	align-items: start;
+}
+
+.bullets {
+	margin-top: 10px;
+}
+
+/* Reviews preview */
+.reviewsGrid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+}
+
+.reviewCard {
+	padding: 14px;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: #fff;
+}
+
+.reviewText {
+	margin-top: 8px;
+	margin-bottom: 0;
+	color: #222;
+	line-height: 1.5;
+	font-size: 14px;
+	white-space: pre-wrap;
+}
+
+.reviewEmpty {
+	color: #888;
+}
+
+.reviewMeta {
+	margin-top: 10px;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.stars {
+	font-size: 18px;
+	letter-spacing: 1px;
+	line-height: 1;
+}
+
+.starOn {
+	color: #f5b301;
+}
+
+.starOff {
+	color: #ccc;
+}
+
+/* Responsive */
+@media (max-width: 920px) {
+	.hero {
+		grid-template-columns: 1fr;
+	}
+	.services {
+		grid-template-columns: 1fr;
+	}
+	.quoteGrid {
+		grid-template-columns: 1fr;
+	}
+	.reviewsGrid {
+		grid-template-columns: 1fr;
+	}
+}

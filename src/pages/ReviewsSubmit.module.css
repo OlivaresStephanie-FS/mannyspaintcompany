@@ -1,0 +1,134 @@
+.wrap {
+	max-width: 520px;
+	margin: 64px auto;
+	padding: 0 18px;
+}
+
+.h2 {
+	margin: 0 0 10px;
+	font-size: 28px;
+	letter-spacing: -0.2px;
+}
+
+.p {
+	margin: 0 0 18px;
+	color: #444;
+	line-height: 1.5;
+}
+
+.form {
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 18px;
+	background: #fff;
+	display: grid;
+	gap: 16px;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+.section {
+	display: grid;
+	gap: 8px;
+}
+
+.label {
+	font-weight: 700;
+	color: var(--text);
+}
+
+.starsRow {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+/* IMPORTANT: "all: unset" prevents global button styles from hiding the star */
+.starBtn {
+	all: unset;
+	cursor: pointer;
+	font-size: 34px;
+	line-height: 34px;
+	padding: 0;
+	user-select: none;
+	transition: transform 0.08s ease;
+}
+
+.starBtn:active {
+	transform: translateY(1px);
+}
+
+.textarea {
+	min-height: 110px;
+	padding: 12px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	font-family: inherit;
+	font-size: 14px;
+	resize: vertical;
+}
+
+.input {
+	padding: 12px;
+	border-radius: 10px;
+	border: 1px solid #ddd;
+	font-family: inherit;
+	font-size: 14px;
+}
+
+.textarea:focus,
+.input:focus {
+	outline: none;
+	border-color: #bbb;
+	box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.hint {
+	font-size: 12px;
+	color: var(--muted);
+	text-align: right;
+}
+
+.errorBox {
+	background: #ffe9e9;
+	border: 1px solid #ffb6b6;
+	color: #7a0000;
+	padding: 10px;
+	border-radius: 10px;
+}
+
+.submit {
+	padding: 12px 14px;
+	border-radius: 10px;
+	border: none;
+	background: #111;
+	color: #fff;
+	cursor: pointer;
+	font-weight: 700;
+}
+
+.submit:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.small {
+	font-size: 12px;
+	color: var(--muted);
+	text-align: center;
+	margin-top: 4px;
+}
+
+.link {
+	display: inline-block;
+	margin-top: 8px;
+	color: var(--text);
+	text-decoration: underline;
+}
+
+.honeypot {
+	position: absolute;
+	left: -9999px;
+	height: 0;
+	width: 0;
+	opacity: 0;
+}

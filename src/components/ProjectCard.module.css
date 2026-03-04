@@ -1,0 +1,89 @@
+.card {
+	border: 1px solid #eee;
+	border-radius: 16px;
+	overflow: hidden;
+	background: #fff;
+}
+
+.media {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	overflow: hidden;
+	background: #f7f7f7;
+}
+
+.img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.chipRow {
+	position: absolute;
+	inset: 12px 12px auto 12px;
+	display: flex;
+	gap: 8px;
+}
+
+/* IMPORTANT: this prevents global button styles from breaking the chips */
+.chip {
+	all: unset;
+	box-sizing: border-box;
+	padding: 6px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 700;
+	border: 1px solid #e6e6e6;
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+	background: rgba(255, 255, 255, 0.92);
+	color: #111;
+}
+
+.chipActive {
+	background: #111;
+	color: #fff;
+	border-color: #111;
+}
+
+.body {
+	padding: 16px;
+	display: grid;
+	gap: 8px;
+}
+
+.title {
+	font-size: 16px;
+	font-weight: 800;
+	color: #111;
+	margin: 0;
+}
+
+.meta {
+	font-size: 13px;
+	color: #666;
+	margin: 0;
+}
+
+.desc {
+	font-size: 14px;
+	color: #333;
+	line-height: 1.5;
+	margin: 0;
+}
+
+.linkRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 6px;
+	gap: 12px;
+}
+
+.subtle {
+	font-size: 12px;
+	color: #777;
+}
