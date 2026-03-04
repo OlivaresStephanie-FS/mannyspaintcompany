@@ -2,6 +2,7 @@ import { getDb } from "./_db.js";
 import { ObjectId } from "mongodb";
 import { hashToken } from "./_reviewToken.js";
 
+const RATE_LIMIT = new Map();
 function json(statusCode, body) {
 	return {
 		statusCode,
@@ -22,6 +23,14 @@ export const handler = async (event) => {
 		const rating = Number(payload.rating || 0);
 		const text = String(payload.text || "").trim();
 		const name = String(payload.name || "").trim();
+		const ip = event.headers["x-forwarded-for"] || "unknown";
+		const now = Date.now();
+
+		if (RATE_LIMIT.has(ip) && now - RATE_LIMIT.get(ip) < 5000) {
+			return json(429, { ok: false, error: "Too many requests" });
+		}
+
+		RATE_LIMIT.set(ip, now);
 
 		if (!quoteId || quoteId.length !== 24) {
 			return json(400, { ok: false, error: "Invalid quoteId" });
@@ -98,6 +107,10 @@ export const handler = async (event) => {
 					"review.submittedAt": now,
 					"review.status": "pending",
 					"review.reviewId": reviewId,
+				},
+				$unset: {
+					"review.tokenHash": "",
+					"review.tokenExpiresAt": "",
 				},
 			},
 		);
