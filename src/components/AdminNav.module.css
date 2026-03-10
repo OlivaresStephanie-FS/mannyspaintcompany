@@ -1,0 +1,45 @@
+.wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.left {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.link {
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #111;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.logout {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #111;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+}

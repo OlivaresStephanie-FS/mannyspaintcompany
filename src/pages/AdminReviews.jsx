@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { getToken, clearToken } from "../lib/adminAuth";
 import { useNavigate } from "react-router-dom";
 import styles from "./AdminReviews.module.css";
+import AdminNav from "../components/AdminNav";
 
 const LIMIT = 10;
 
 export default function AdminReviews() {
 	const navigate = useNavigate();
 
-	const [status, setStatus] = useState("pending"); 
+	const [status, setStatus] = useState("pending");
 	const [page, setPage] = useState(1);
 
 	const [items, setItems] = useState([]);
@@ -141,6 +142,7 @@ export default function AdminReviews() {
 
 	return (
 		<div className={styles.page}>
+			<AdminNav />
 			<h2 className={styles.h2}>Reviews</h2>
 
 			<div className={styles.toolbar}>

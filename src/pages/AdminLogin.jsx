@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { setToken } from "../lib/adminAuth";
+import { setToken, getToken } from "../lib/adminAuth";
 import styles from "./AdminLogin.module.css";
 
 export default function AdminLogin() {
@@ -9,6 +9,13 @@ export default function AdminLogin() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		const t = String(getToken() || "").trim();
+		if (t) {
+			navigate("/admin/dashboard");
+		}
+	}, [navigate]);
 
 	async function handleLogin(e) {
 		e.preventDefault();
@@ -27,7 +34,7 @@ export default function AdminLogin() {
 			if (!data.token) throw new Error("Missing token");
 
 			setToken(data.token);
-			navigate("/admin/reviews");
+			navigate("/admin/dashboard");
 		} catch (err) {
 			setError(err?.message || "Login failed");
 		} finally {

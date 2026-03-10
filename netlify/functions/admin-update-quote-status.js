@@ -12,8 +12,8 @@ const ALLOWED = new Set([
 	"archived",
 ]);
 
-// Status transition rules (forward + backward) + allow new -> scheduled
 const ORDER = ["new", "contacted", "scheduled", "completed"];
+
 function isAllowedTransition(fromStatus, toStatus) {
 	const from = fromStatus || "new";
 	const to = toStatus;
@@ -39,6 +39,7 @@ function isAllowedTransition(fromStatus, toStatus) {
 function isValidBearer(event) {
 	const auth =
 		event.headers?.authorization || event.headers?.Authorization || "";
+
 	if (!auth.startsWith("Bearer ")) return false;
 
 	const token = auth.slice("Bearer ".length).trim();
@@ -106,6 +107,18 @@ function buildReviewEmailHtml({ name, service, reviewLink }) {
   `;
 }
 
+function buildActivityBase(current, now) {
+	return {
+		quoteId: current._id,
+		quoteIdString: String(current._id),
+		clientName: current.name || "",
+		clientEmail: current.email || "",
+		service: current.service || "",
+		createdAt: now,
+		source: "admin",
+	};
+}
+
 export const handler = async (event) => {
 	try {
 		if (event.httpMethod !== "PATCH") {
@@ -163,7 +176,11 @@ export const handler = async (event) => {
 		const db = await getDb();
 		const _id = new ObjectId(quoteId);
 
-		const current = await db.collection("quotes").findOne({ _id });
+		const quotes = db.collection("quotes");
+		const activity = db.collection("activity");
+
+		const current = await quotes.findOne({ _id });
+
 		if (!current) {
 			return {
 				statusCode: 404,
@@ -176,6 +193,7 @@ export const handler = async (event) => {
 		}
 
 		const fromStatus = current.status || "new";
+
 		if (!isAllowedTransition(fromStatus, status)) {
 			return {
 				statusCode: 400,
@@ -192,7 +210,6 @@ export const handler = async (event) => {
 
 		const now = new Date();
 
-		// --- Review request logic (only when moving into "completed") ---
 		const reviewEnabled =
 			String(process.env.REVIEW_EMAIL_ENABLED || "true") === "true";
 
@@ -200,24 +217,22 @@ export const handler = async (event) => {
 			/\/+$/,
 			"",
 		);
+
 		const secret = process.env.REVIEW_TOKEN_SECRET;
 
-		// TTL (days) with safe fallback
 		const ttlDaysRaw = Number(process.env.REVIEW_TOKEN_TTL_DAYS);
 		const ttlDays =
 			Number.isFinite(ttlDaysRaw) && ttlDaysRaw > 0 ? ttlDaysRaw : 30;
 
-		// send only when first moving into completed AND we haven't requested before
 		const shouldRequestReview =
 			status === "completed" &&
 			reviewEnabled &&
 			!!current.email &&
 			siteUrl &&
 			secret &&
-			!current.review?.requestedAt && // ✅ do not resend
+			!current.review?.requestedAt &&
 			!current.review?.tokenHash;
 
-		// ✅ repair expiry if an older record saved epoch/invalid date (no resend, no new token)
 		const existingExpiresMs = current.review?.tokenExpiresAt
 			? new Date(current.review.tokenExpiresAt).getTime()
 			: NaN;
@@ -233,10 +248,8 @@ export const handler = async (event) => {
 			secret;
 
 		let reviewLink = "";
-		let reviewPatch = {}; // only added if shouldRequestReview is true
-
-		// optional repair patch for tokenExpiresAt only
-		let repairPatch = {}; // only added if shouldRepairExpiry is true
+		let reviewPatch = {};
+		let repairPatch = {};
 
 		if (shouldRequestReview) {
 			const rawToken = makeReviewToken();
@@ -261,14 +274,11 @@ export const handler = async (event) => {
 			};
 		}
 
-		// ✅ statusUpdatedAt always; ✅ completedAt only set once
-		// ✅ include repairPatch so tokenExpiresAt can be fixed if it was saved as epoch
-		await db.collection("quotes").updateOne({ _id }, [
+		await quotes.updateOne({ _id }, [
 			{
 				$set: {
 					status,
 					statusUpdatedAt: now,
-
 					completedAt: {
 						$cond: [
 							{ $eq: [status, "completed"] },
@@ -276,16 +286,15 @@ export const handler = async (event) => {
 							"$completedAt",
 						],
 					},
-
 					...reviewPatch,
 					...repairPatch,
 				},
 			},
 		]);
 
-		// Send review email AFTER DB update succeeds
 		if (shouldRequestReview) {
 			const transporter = createTransporter();
+
 			if (transporter) {
 				const subject =
 					process.env.REVIEW_EMAIL_SUBJECT || "How did we do? ⭐";
@@ -306,7 +315,45 @@ export const handler = async (event) => {
 			}
 		}
 
-		const updated = await db.collection("quotes").findOne({ _id });
+		const activityDocs = [];
+
+		if (fromStatus !== status) {
+			activityDocs.push({
+				...buildActivityBase(current, now),
+				type: "quote_status_changed",
+				title: "Quote status changed",
+				message: `${fromStatus} → ${status}`,
+				fromStatus,
+				toStatus: status,
+			});
+		}
+
+		if (fromStatus !== "completed" && status === "completed") {
+			activityDocs.push({
+				...buildActivityBase(current, now),
+				type: "quote_completed",
+				title: "Quote marked completed",
+				message: "Quote moved to completed",
+				fromStatus,
+				toStatus: status,
+			});
+		}
+
+		if (shouldRequestReview) {
+			activityDocs.push({
+				...buildActivityBase(current, now),
+				type: "review_requested",
+				title: "Review request sent",
+				message: "Review email sent to client",
+				toStatus: status,
+			});
+		}
+
+		if (activityDocs.length) {
+			await activity.insertMany(activityDocs);
+		}
+
+		const updated = await quotes.findOne({ _id });
 
 		return {
 			statusCode: 200,
@@ -318,6 +365,7 @@ export const handler = async (event) => {
 		};
 	} catch (err) {
 		console.error("admin-update-quote-status error:", err);
+
 		return {
 			statusCode: 500,
 			headers: {

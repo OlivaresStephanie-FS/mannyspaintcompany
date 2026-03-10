@@ -97,3 +97,8 @@ export const handler = async (event) => {
 		};
 	}
 };
+console.log("Cloudinary env check:", {
+  cloud: process.env.CLOUDINARY_CLOUD_NAME,
+  apiKey: process.env.CLOUDINARY_API_KEY,
+  secretExists: !!process.env.CLOUDINARY_API_SECRET,
+});

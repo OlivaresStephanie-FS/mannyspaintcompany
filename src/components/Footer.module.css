@@ -22,3 +22,16 @@
 .copy {
 	margin-top: 12px;
 }
+.admin {
+	margin-top: 6px;
+	font-size: 12px;
+}
+
+.admin a {
+	color: #777;
+	text-decoration: none;
+}
+
+.admin a:hover {
+	text-decoration: underline;
+}

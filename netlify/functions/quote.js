@@ -1,6 +1,17 @@
 import { getDb } from "./_db.js";
 import nodemailer from "nodemailer";
 
+function json(statusCode, body) {
+	return {
+		statusCode,
+		headers: {
+			"Content-Type": "application/json",
+			"Cache-Control": "no-store",
+		},
+		body: JSON.stringify(body),
+	};
+}
+
 function createTransporter() {
 	const host = process.env.SMTP_HOST;
 	const port = Number(process.env.SMTP_PORT || 465);
@@ -12,7 +23,7 @@ function createTransporter() {
 	return nodemailer.createTransport({
 		host,
 		port,
-		secure: port === 465, // true for 465, false for 587
+		secure: port === 465,
 		auth: { user, pass },
 	});
 }
@@ -64,7 +75,6 @@ function buildClientConfirmHtml(payload, cleanedUploads) {
 }
 
 function thumb(url, w = 220, h = 160) {
-	// Inserts Cloudinary transformation after /upload/
 	if (!url || typeof url !== "string") return "";
 	const needle = "/upload/";
 	if (!url.includes(needle)) return url;
@@ -84,34 +94,27 @@ function escapeHtml(s = "") {
 export const handler = async (event) => {
 	try {
 		if (event.httpMethod !== "POST") {
-			return {
-				statusCode: 200,
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					ok: true,
-					message: "quote endpoint reachable (use POST)",
-				}),
-			};
+			return json(200, {
+				ok: true,
+				message: "quote endpoint reachable (use POST)",
+			});
 		}
 
 		const payload = JSON.parse(event.body || "{}");
 
-		// Basic validation
 		const required = ["name", "phone", "service", "description"];
 		for (const key of required) {
 			if (!payload[key] || String(payload[key]).trim() === "") {
-				return {
-					statusCode: 400,
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						ok: false,
-						error: `Missing field: ${key}`,
-					}),
-				};
+				return json(400, {
+					ok: false,
+					error: `Missing field: ${key}`,
+				});
 			}
 		}
 
 		const db = await getDb();
+		const quotes = db.collection("quotes");
+		const activity = db.collection("activity");
 
 		const uploads = Array.isArray(payload.uploads) ? payload.uploads : [];
 
@@ -128,7 +131,6 @@ export const handler = async (event) => {
 			}))
 			.filter((u) => u.url);
 
-		// ✅ Step 0 schema upgrades (no migration required)
 		const now = new Date();
 
 		const doc = {
@@ -153,20 +155,34 @@ export const handler = async (event) => {
 				tokenExpiresAt: null,
 				submittedAt: null,
 				reviewId: null,
+				status: null,
+				moderatedAt: null,
 			},
 
 			source: "website",
 		};
 
-		const result = await db.collection("quotes").insertOne(doc);
+		const result = await quotes.insertOne(doc);
 		const quoteId = result.insertedId.toString();
 
 		console.log("✅ Saved to MongoDB:", quoteId);
 
+		await activity.insertOne({
+			type: "quote_submitted",
+			title: "Quote submitted",
+			message: "New quote request submitted from website",
+			source: "website",
+			createdAt: now,
+			quoteId: result.insertedId,
+			quoteIdString: quoteId,
+			clientName: doc.name || "",
+			clientEmail: doc.email || "",
+			service: doc.service || "",
+			status: "new",
+		});
+
 		// ----------------------------
 		// EMAIL NOTIFICATIONS
-		// - Admin alert (you + owner)
-		// - Client confirmation (if email provided)
 		// ----------------------------
 		const {
 			SMTP_USER,
@@ -181,7 +197,6 @@ export const handler = async (event) => {
 		if (transporter && ADMIN_NOTIFY_EMAILS) {
 			const toList = asArrayEmails(ADMIN_NOTIFY_EMAILS);
 
-			// Build admin HTML
 			const uploadHtml = cleanedUploads.length
 				? cleanedUploads
 						.map((u) => {
@@ -220,18 +235,16 @@ export const handler = async (event) => {
 		</div>
 	`;
 
-			// 1) ADMIN EMAIL
 			await transporter.sendMail({
 				from: `"${NOTIFY_EMAIL_FROM_NAME || "Quotes"}" <${SMTP_USER}>`,
 				to: toList,
-				replyTo: doc.email || SMTP_USER, // replies go to the client if provided
+				replyTo: doc.email || SMTP_USER,
 				subject: `New Quote Request — ${doc.service} (${doc.name})`,
 				html: adminHtml,
 			});
 
 			console.log("📧 Admin email sent to:", toList.join(", "));
 
-			// 2) CLIENT CONFIRMATION (only if they provided email and enabled)
 			const clientEmail = String(doc.email || "").trim();
 			const clientEnabled =
 				String(CLIENT_CONFIRM_ENABLED || "true") === "true";
@@ -240,7 +253,7 @@ export const handler = async (event) => {
 				await transporter.sendMail({
 					from: `"${NOTIFY_EMAIL_FROM_NAME || "Quotes"}" <${SMTP_USER}>`,
 					to: clientEmail,
-					replyTo: SMTP_USER, // client replies go to your inbox
+					replyTo: SMTP_USER,
 					subject:
 						CLIENT_CONFIRM_SUBJECT ||
 						"We received your quote request ✅",
@@ -259,20 +272,12 @@ export const handler = async (event) => {
 			);
 		}
 
-		return {
-			statusCode: 200,
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ ok: true, quoteId }),
-		};
+		return json(200, { ok: true, quoteId });
 	} catch (err) {
 		console.error("❌ quote error:", err);
-		return {
-			statusCode: 500,
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				ok: false,
-				error: err.message || "Server error",
-			}),
-		};
+		return json(500, {
+			ok: false,
+			error: err.message || "Server error",
+		});
 	}
 };

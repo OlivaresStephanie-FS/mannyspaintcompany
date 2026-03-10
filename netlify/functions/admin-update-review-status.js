@@ -7,7 +7,6 @@ function json(statusCode, body) {
 		statusCode,
 		headers: {
 			"Content-Type": "application/json",
-			// Admin endpoints should NOT be cached
 			"Cache-Control": "no-store",
 		},
 		body: JSON.stringify(body),
@@ -17,6 +16,7 @@ function json(statusCode, body) {
 function isValidBearer(event) {
 	const auth =
 		event.headers?.authorization || event.headers?.Authorization || "";
+
 	if (!auth.startsWith("Bearer ")) return false;
 
 	const token = auth.slice("Bearer ".length).trim();
@@ -35,11 +35,26 @@ function isValidBearer(event) {
 
 const ALLOWED = new Set(["pending", "approved", "rejected"]);
 
+function buildActivityBase(review, now) {
+	return {
+		reviewId: review._id,
+		reviewIdString: String(review._id),
+		quoteId: review.quoteId || null,
+		quoteIdString: review.quoteId ? String(review.quoteId) : "",
+		clientName: review.name || "",
+		clientEmail: review.email || "",
+		service: review.service || "",
+		createdAt: now,
+		source: "admin",
+	};
+}
+
 export const handler = async (event) => {
 	try {
 		if (event.httpMethod !== "PATCH") {
 			return json(405, { ok: false, error: "Method Not Allowed" });
 		}
+
 		if (!isValidBearer(event)) {
 			return json(401, { ok: false, error: "Unauthorized" });
 		}
@@ -49,19 +64,26 @@ export const handler = async (event) => {
 		if (!reviewId || String(reviewId).length !== 24) {
 			return json(400, { ok: false, error: "Invalid reviewId" });
 		}
+
 		if (!ALLOWED.has(status)) {
 			return json(400, { ok: false, error: "Invalid status" });
 		}
 
 		const db = await getDb();
+		const reviews = db.collection("reviews");
+		const quotes = db.collection("quotes");
+		const activity = db.collection("activity");
+
 		const _id = new ObjectId(reviewId);
+		const review = await reviews.findOne({ _id });
 
-		const review = await db.collection("reviews").findOne({ _id });
-		if (!review) return json(404, { ok: false, error: "Review not found" });
+		if (!review) {
+			return json(404, { ok: false, error: "Review not found" });
+		}
 
+		const previousStatus = review.status || "pending";
 		const now = new Date();
 
-		// ✅ single source of truth for moderation timestamps
 		const patch = {
 			status,
 			updatedAt: now,
@@ -69,11 +91,10 @@ export const handler = async (event) => {
 			rejectedAt: status === "rejected" ? now : null,
 		};
 
-		await db.collection("reviews").updateOne({ _id }, { $set: patch });
+		await reviews.updateOne({ _id }, { $set: patch });
 
-		// ✅ Keep quote snapshot consistent (only if quoteId exists)
 		if (review.quoteId) {
-			await db.collection("quotes").updateOne(
+			await quotes.updateOne(
 				{ _id: review.quoteId },
 				{
 					$set: {
@@ -84,7 +105,35 @@ export const handler = async (event) => {
 			);
 		}
 
-		const updated = await db.collection("reviews").findOne({ _id });
+		const activityDocs = [];
+
+		if (previousStatus !== status && status === "approved") {
+			activityDocs.push({
+				...buildActivityBase(review, now),
+				type: "review_approved",
+				title: "Review approved",
+				message: "Review was approved for public display",
+				fromStatus: previousStatus,
+				toStatus: status,
+			});
+		}
+
+		if (previousStatus !== status && status === "rejected") {
+			activityDocs.push({
+				...buildActivityBase(review, now),
+				type: "review_rejected",
+				title: "Review rejected",
+				message: "Review was rejected during moderation",
+				fromStatus: previousStatus,
+				toStatus: status,
+			});
+		}
+
+		if (activityDocs.length) {
+			await activity.insertMany(activityDocs);
+		}
+
+		const updated = await reviews.findOne({ _id });
 
 		return json(200, { ok: true, review: updated });
 	} catch (err) {

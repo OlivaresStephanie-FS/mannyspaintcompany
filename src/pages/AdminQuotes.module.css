@@ -279,3 +279,8 @@
 	color: #1e8e3e;
 	margin-left: 6px;
 }
+
+.th:last-child,
+.td:last-child {
+	white-space: nowrap;
+}

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken, clearToken } from "../lib/adminAuth";
+import AdminNav from "../components/AdminNav";
+import QuoteDetailDrawer from "../components/QuoteDetailDrawer";
 import styles from "./AdminQuotes.module.css";
 
 function formatDate(v) {
@@ -11,8 +13,6 @@ function formatDate(v) {
 	}
 }
 
-// Builds a thumbnail URL from the original Cloudinary secure_url
-// by inserting a transformation after `/upload/`
 function toThumbUrl(url, w = 140, h = 100) {
 	if (!url || typeof url !== "string") return "";
 	const needle = "/upload/";
@@ -39,16 +39,15 @@ export default function AdminQuotes() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 
-	// status UI state
 	const [draftStatus, setDraftStatus] = useState({});
 	const [savingIds, setSavingIds] = useState(() => new Set());
+	const [selectedQuote, setSelectedQuote] = useState(null);
 
 	const totalPages = useMemo(
 		() => Math.max(1, Math.ceil(total / LIMIT)),
 		[total],
 	);
 
-	// ✅ Guard: must be logged in
 	useEffect(() => {
 		const t = String(getToken() || "").trim();
 		if (!t) navigate("/admin/login");
@@ -72,7 +71,6 @@ export default function AdminQuotes() {
 				{ headers: { Authorization: `Bearer ${t}` } },
 			);
 
-			// ✅ If JWT expired/invalid, force relogin
 			if (res.status === 401) {
 				clearToken();
 				navigate("/admin/login");
@@ -89,7 +87,6 @@ export default function AdminQuotes() {
 			setTotal(Number(data.total || 0));
 			setPage(Number(data.page || p));
 
-			// keep draftStatus in sync with fetched data
 			setDraftStatus((cur) => {
 				const next = { ...cur };
 				for (const q of list) {
@@ -98,6 +95,12 @@ export default function AdminQuotes() {
 					}
 				}
 				return next;
+			});
+
+			setSelectedQuote((cur) => {
+				if (!cur?._id) return cur;
+				const freshMatch = list.find((q) => q._id === cur._id);
+				return freshMatch || cur;
 			});
 		} catch (e) {
 			setItems([]);
@@ -113,14 +116,19 @@ export default function AdminQuotes() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	// auto-refresh quotes every 15 seconds
 	useEffect(() => {
 		const interval = setInterval(() => {
 			load(page);
 		}, 15000);
 
 		return () => clearInterval(interval);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [page]);
+
+	function openQuote(quoteId) {
+		const match = items.find((q) => q._id === quoteId);
+		setSelectedQuote(match || null);
+	}
 
 	async function saveQuoteStatus(quoteId) {
 		setError("");
@@ -134,15 +142,19 @@ export default function AdminQuotes() {
 
 		const nextStatus = draftStatus[quoteId] || "new";
 
-		// lock row
 		setSavingIds((s) => new Set(s).add(quoteId));
 
-		// optimistic UI
-		const prev = items;
+		const prevItems = items;
+		const prevSelectedQuote = selectedQuote;
+
 		setItems((cur) =>
 			cur.map((q) =>
 				q._id === quoteId ? { ...q, status: nextStatus } : q,
 			),
+		);
+
+		setSelectedQuote((cur) =>
+			cur && cur._id === quoteId ? { ...cur, status: nextStatus } : cur,
 		);
 
 		try {
@@ -173,13 +185,19 @@ export default function AdminQuotes() {
 				setItems((cur) =>
 					cur.map((q) => (q._id === quoteId ? data.quote : q)),
 				);
+
 				setDraftStatus((cur) => ({
 					...cur,
 					[quoteId]: data.quote.status || nextStatus,
 				}));
+
+				setSelectedQuote((cur) =>
+					cur && cur._id === quoteId ? data.quote : cur,
+				);
 			}
 		} catch (e) {
-			setItems(prev);
+			setItems(prevItems);
+			setSelectedQuote(prevSelectedQuote);
 			setError(e?.message || "Update failed");
 		} finally {
 			setSavingIds((s) => {
@@ -190,13 +208,10 @@ export default function AdminQuotes() {
 		}
 	}
 
-	function logout() {
-		clearToken();
-		navigate("/admin/login");
-	}
-
 	return (
 		<div className={styles.page}>
+			<AdminNav />
+
 			<div className={styles.card}>
 				<h1 className={styles.h1}>Admin — Quotes</h1>
 				<p className={styles.subhead}>
@@ -209,21 +224,14 @@ export default function AdminQuotes() {
 						onClick={() => load(1)}
 						disabled={loading}
 						type="button">
-						{loading ? "Loading..." : "Refresh"}{" "}
-						<span className={styles.liveIndicator}>Live</span>
-					</button>
-
-					<button
-						className={styles.btn}
-						onClick={logout}
-						type="button"
-						disabled={loading}>
-						Log out
+						{loading ? "Loading..." : "Refresh"}
 					</button>
 
 					<div className={styles.muted}>
 						Total: <b>{total}</b>
 					</div>
+
+					<span className={styles.liveIndicator}>Live</span>
 				</div>
 
 				{error ? <div className={styles.err}>{error}</div> : null}
@@ -237,6 +245,7 @@ export default function AdminQuotes() {
 								<th className={styles.th}>Service</th>
 								<th className={styles.th}>Status</th>
 								<th className={styles.th}>Uploads</th>
+								<th className={styles.th}>Actions</th>
 							</tr>
 						</thead>
 
@@ -245,7 +254,6 @@ export default function AdminQuotes() {
 								const uploads = Array.isArray(q.uploads)
 									? q.uploads
 									: [];
-
 								const desc = String(q.description || "");
 								const descShort =
 									desc.length > 110
@@ -332,8 +340,10 @@ export default function AdminQuotes() {
 												</button>
 
 												<span
-													className={`${styles.statusPill} ${styles[q.status]}`}>
-													{q.status || "new"}
+													className={`${styles.statusPill} ${
+														styles[currentStatus]
+													}`}>
+													{currentStatus}
 												</span>
 											</div>
 										</td>
@@ -406,13 +416,24 @@ export default function AdminQuotes() {
 												</span>
 											)}
 										</td>
+
+										<td className={styles.td}>
+											<button
+												type="button"
+												className={styles.btnSmall}
+												onClick={() =>
+													openQuote(q._id)
+												}>
+												View
+											</button>
+										</td>
 									</tr>
 								);
 							})}
 
 							{!items.length && !loading ? (
 								<tr>
-									<td className={styles.td} colSpan={5}>
+									<td className={styles.td} colSpan={6}>
 										<span className={styles.muted}>
 											No quotes found.
 										</span>
@@ -445,6 +466,21 @@ export default function AdminQuotes() {
 					</button>
 				</div>
 			</div>
+
+			<QuoteDetailDrawer
+				quote={selectedQuote}
+				draftStatus={draftStatus}
+				savingIds={savingIds}
+				statusOptions={STATUS_OPTIONS}
+				onStatusChange={(quoteId, value) =>
+					setDraftStatus((cur) => ({
+						...cur,
+						[quoteId]: value,
+					}))
+				}
+				onSaveStatus={saveQuoteStatus}
+				onClose={() => setSelectedQuote(null)}
+			/>
 		</div>
 	);
 }
