@@ -190,9 +190,13 @@ export default function QuoteDetailDrawer({
 								{formatDate(review.requestedAt) || "Not sent"}
 							</div>
 							<div>
-								<div className={styles.label}>Rating</div>
-								<div className={styles.value}>
-									{review.rating ? `${review.rating}/5` : "—"}
+								<div>
+									<div className={styles.label}>Rating</div>
+									<div className={styles.value}>
+										{review.rating
+											? "⭐".repeat(review.rating)
+											: "—"}
+									</div>
 								</div>
 							</div>
 						</div>

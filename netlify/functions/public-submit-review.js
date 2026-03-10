@@ -6,6 +6,7 @@ const RATE_LIMIT = new Map();
 
 function json(statusCode, body) {
 	return {
+		statusCode,
 		headers: {
 			"Content-Type": "application/json",
 			"Cache-Control": "no-store",

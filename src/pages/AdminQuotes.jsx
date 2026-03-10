@@ -207,6 +207,45 @@ export default function AdminQuotes() {
 			});
 		}
 	}
+	async function resendReviewLink(quoteId) {
+		setError("");
+
+		const t = String(getToken() || "").trim();
+		if (!t) {
+			clearToken();
+			navigate("/admin/login");
+			return;
+		}
+
+		try {
+			const res = await fetch(
+				"/.netlify/functions/admin-resend-review-link",
+				{
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${t}`,
+					},
+					body: JSON.stringify({ quoteId }),
+				},
+			);
+
+			if (res.status === 401) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
+
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok || !data.ok) {
+				throw new Error(data?.error || "Failed to resend review link");
+			}
+
+			await load(page);
+		} catch (e) {
+			setError(e?.message || "Failed to resend review link");
+		}
+	}
 
 	return (
 		<div className={styles.page}>
