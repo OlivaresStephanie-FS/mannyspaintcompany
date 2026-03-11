@@ -56,7 +56,7 @@
 .grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+    gap: 16px;
     margin-bottom: 18px;
 }
 
@@ -64,21 +64,26 @@
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 16px;
+    padding: 18px;
+    min-width: 0;
 }
 
 .cardLabel {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--muted);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.3;
 }
 
 .cardValue {
-    font-size: 32px;
+    font-size: clamp(28px, 3vw, 34px);
     font-weight: 800;
     color: var(--text);
     line-height: 1;
+    word-break: break-word;
 }
 
 .snapshotGrid {
@@ -92,7 +97,8 @@
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 16px;
+    padding: 18px;
+    min-width: 0;
 }
 
 .snapshotLabel {
@@ -100,22 +106,24 @@
     font-weight: 700;
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
+    line-height: 1.3;
 }
 
 .snapshotValue {
-    margin-top: 8px;
-    font-size: 32px;
+    margin-top: 10px;
+    font-size: clamp(30px, 3.2vw, 36px);
     font-weight: 900;
     line-height: 1;
     color: #111;
+    word-break: break-word;
 }
 
 .snapshotSub {
-    margin-top: 8px;
+    margin-top: 10px;
     font-size: 13px;
     color: var(--muted);
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .twoCol {
@@ -131,6 +139,7 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 16px;
+    min-width: 0;
 }
 
 .h2 {
@@ -160,11 +169,13 @@
 .statLabel {
     color: #444;
     font-size: 14px;
+    min-width: 0;
 }
 
 .statValue {
     font-weight: 800;
     color: #111;
+    flex-shrink: 0;
 }
 
 .chartList {
@@ -237,11 +248,13 @@
     background: #ff9a9a;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1100px) {
     .grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+}
 
+@media (max-width: 920px) {
     .twoCol {
         grid-template-columns: 1fr;
     }
@@ -256,5 +269,12 @@
 @media (max-width: 640px) {
     .grid {
         grid-template-columns: 1fr;
+    }
+
+    .card,
+    .snapshotCard,
+    .panel,
+    .panelWide {
+        padding: 14px;
     }
 }

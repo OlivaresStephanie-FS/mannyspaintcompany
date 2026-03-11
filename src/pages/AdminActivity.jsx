@@ -22,6 +22,89 @@ const TYPE_LABELS = {
 	review_rejected: "Review Rejected",
 };
 
+function getTypeLabel(type) {
+	return TYPE_LABELS[type] || "Activity";
+}
+
+function getItemTitle(item) {
+	if (item.title) return item.title;
+
+	switch (item.type) {
+		case "quote_status_changed":
+			if (item.fromStatus && item.toStatus) {
+				return `Quote moved from ${item.fromStatus} to ${item.toStatus}`;
+			}
+			if (item.toStatus) {
+				return `Quote moved to ${item.toStatus}`;
+			}
+			return "Quote status updated";
+
+		case "quote_completed":
+			return "Quote marked completed";
+
+		case "review_requested":
+			return "Review request sent";
+
+		case "review_submitted":
+			return "Review submitted";
+
+		case "review_approved":
+			return "Review approved";
+
+		case "review_rejected":
+			return "Review rejected";
+
+		case "quote_submitted":
+			return "New quote submitted";
+
+		default:
+			return getTypeLabel(item.type);
+	}
+}
+
+function getItemMessage(item) {
+	if (item.message) return item.message;
+
+	switch (item.type) {
+		case "quote_submitted":
+			return "A new quote was submitted through the public form.";
+		case "quote_status_changed":
+			if (item.fromStatus && item.toStatus) {
+				return `Status changed from ${item.fromStatus} to ${item.toStatus}.`;
+			}
+			if (item.toStatus) {
+				return `Status changed to ${item.toStatus}.`;
+			}
+			return "Quote status was updated.";
+		case "quote_completed":
+			return "This quote was marked as completed.";
+		case "review_requested":
+			return "A review request email was sent to the client.";
+		case "review_submitted":
+			return "A customer submitted a review.";
+		case "review_approved":
+			return "A review was approved and made public.";
+		case "review_rejected":
+			return "A review was rejected and kept off the public page.";
+		default:
+			return "";
+	}
+}
+
+function hasMeta(item) {
+	return Boolean(
+		item.clientName ||
+		item.service ||
+		item.quoteIdString ||
+		item.source ||
+		item.rating ||
+		item.reviewIdString ||
+		item.fromStatus ||
+		item.toStatus ||
+		item.reviewStatus,
+	);
+}
+
 export default function AdminActivity() {
 	const navigate = useNavigate();
 
@@ -104,11 +187,15 @@ export default function AdminActivity() {
 			{error ? <div className={styles.err}>{error}</div> : null}
 
 			<div className={styles.panel}>
-				{items.length ? (
+				{loading ? (
+					<div className={styles.empty}>Loading activity…</div>
+				) : items.length ? (
 					<div className={styles.list}>
 						{items.map((item) => {
 							const type = String(item.type || "");
-							const label = TYPE_LABELS[type] || "Activity";
+							const label = getTypeLabel(type);
+							const title = getItemTitle(item);
+							const message = getItemMessage(item);
 
 							return (
 								<div key={item._id} className={styles.item}>
@@ -121,108 +208,189 @@ export default function AdminActivity() {
 										</span>
 
 										<span className={styles.date}>
-											{formatDate(item.createdAt)}
+											{formatDate(item.createdAt) || "—"}
 										</span>
 									</div>
 
-									<div className={styles.title}>
-										{item.title || label}
-									</div>
+									<div className={styles.title}>{title}</div>
 
-									{item.message ? (
+									{message ? (
 										<div className={styles.message}>
-											{item.message}
+											{message}
 										</div>
 									) : null}
 
-									<div className={styles.metaGrid}>
-										<div>
-											<span className={styles.metaLabel}>
-												Client
-											</span>
-											<span className={styles.metaValue}>
-												{item.clientName || "-"}
-											</span>
+									{hasMeta(item) ? (
+										<div className={styles.metaGrid}>
+											{item.clientName ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														Client
+													</span>
+													<span
+														className={
+															styles.metaValue
+														}>
+														{item.clientName}
+													</span>
+												</div>
+											) : null}
+
+											{item.service ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														Service
+													</span>
+													<span
+														className={
+															styles.metaValue
+														}>
+														{item.service}
+													</span>
+												</div>
+											) : null}
+
+											{item.quoteIdString ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														Quote ID
+													</span>
+													<button
+														type="button"
+														className={
+															styles.linkBtn
+														}
+														onClick={() =>
+															navigate(
+																`/admin?quote=${encodeURIComponent(
+																	item.quoteIdString,
+																)}`,
+															)
+														}>
+														{item.quoteIdString}
+													</button>
+												</div>
+											) : null}
+
+											{item.reviewIdString ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														Review ID
+													</span>
+													<span
+														className={
+															styles.metaValueBreak
+														}>
+														{item.reviewIdString}
+													</span>
+												</div>
+											) : null}
+
+											{item.fromStatus ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														From Status
+													</span>
+													<span
+														className={
+															styles.metaValue
+														}>
+														{item.fromStatus}
+													</span>
+												</div>
+											) : null}
+
+											{item.toStatus ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														To Status
+													</span>
+													<span
+														className={
+															styles.metaValue
+														}>
+														{item.toStatus}
+													</span>
+												</div>
+											) : null}
+
+											{item.reviewStatus ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														Review Status
+													</span>
+													<span
+														className={
+															styles.metaValue
+														}>
+														{item.reviewStatus}
+													</span>
+												</div>
+											) : null}
+
+											{item.rating ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														Rating
+													</span>
+													<span
+														className={
+															styles.metaValue
+														}>
+														{item.rating}/5
+													</span>
+												</div>
+											) : null}
+
+											{item.source ? (
+												<div>
+													<span
+														className={
+															styles.metaLabel
+														}>
+														Source
+													</span>
+													<span
+														className={
+															styles.metaValue
+														}>
+														{item.source}
+													</span>
+												</div>
+											) : null}
 										</div>
-
-										<div>
-											<span className={styles.metaLabel}>
-												Service
-											</span>
-											<span className={styles.metaValue}>
-												{item.service || "-"}
-											</span>
-										</div>
-
-										<div>
-											<span className={styles.metaLabel}>
-												Quote ID
-											</span>
-											<span
-												className={
-													styles.metaValueBreak
-												}
-												onClick={() =>
-													navigate(
-														`/admin?quote=${item.quoteIdString}`,
-													)
-												}>
-												{item.quoteIdString}
-											</span>
-										</div>
-
-										<div>
-											<span className={styles.metaLabel}>
-												Source
-											</span>
-											<span className={styles.metaValue}>
-												{item.source || "-"}
-											</span>
-										</div>
-
-										{item.rating ? (
-											<div>
-												<span
-													className={
-														styles.metaLabel
-													}>
-													Rating
-												</span>
-												<span
-													className={
-														styles.metaValue
-													}>
-													{item.rating}/5
-												</span>
-											</div>
-										) : null}
-
-										{item.reviewIdString ? (
-											<div>
-												<span
-													className={
-														styles.metaLabel
-													}>
-													Review ID
-												</span>
-												<span
-													className={
-														styles.metaValueBreak
-													}>
-													{item.reviewIdString}
-												</span>
-											</div>
-										) : null}
-
-                                        
-									</div>
+									) : null}
 								</div>
 							);
 						})}
 					</div>
-				) : !loading ? (
+				) : (
 					<div className={styles.empty}>No activity found.</div>
-				) : null}
+				)}
 			</div>
 		</div>
 	);

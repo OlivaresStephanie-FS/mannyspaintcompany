@@ -1,4 +1,3 @@
-// netlify/functions/public-reviews.js
 import { getDb } from "./_db.js";
 
 function json(statusCode, body) {
@@ -6,10 +5,21 @@ function json(statusCode, body) {
 		statusCode,
 		headers: {
 			"Content-Type": "application/json",
-			// public endpoint: allow caching a bit
 			"Cache-Control": "public, max-age=60",
 		},
 		body: JSON.stringify(body),
+	};
+}
+
+function normalizeReview(doc = {}) {
+	return {
+		_id: doc._id,
+		name: doc.name || "",
+		rating: Number(doc.rating) || 0,
+		text: doc.text || doc.message || "",
+		serviceType: doc.serviceType || "",
+		createdAt: doc.createdAt || doc.submittedAt || null,
+		submittedAt: doc.submittedAt || doc.createdAt || null,
 	};
 }
 
@@ -24,15 +34,17 @@ export const handler = async (event) => {
 
 		const db = await getDb();
 
-		// only approved reviews should be public
 		const items = await db
 			.collection("reviews")
 			.find({ status: "approved" })
-			.sort({ submittedAt: -1, _id: -1 })
+			.sort({ submittedAt: -1, createdAt: -1, _id: -1 })
 			.limit(limit)
 			.toArray();
 
-		return json(200, { ok: true, items });
+		return json(200, {
+			ok: true,
+			items: items.map(normalizeReview),
+		});
 	} catch (err) {
 		console.error("public-reviews error:", err);
 		return json(500, { ok: false, error: "Server error" });

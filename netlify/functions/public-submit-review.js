@@ -147,6 +147,9 @@ export const handler = async (event) => {
 			clientEmail: quote.email || "",
 			service: quote.service || "",
 			rating,
+			ratingSnapshot: rating,
+			reviewStatus: "pending",
+			toStatus: quote.status || "",
 		});
 
 		return json(200, { ok: true, reviewId: reviewId.toString() });

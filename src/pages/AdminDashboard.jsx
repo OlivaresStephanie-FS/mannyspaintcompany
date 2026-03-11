@@ -9,6 +9,18 @@ function percent(value, total) {
 	return Math.round((value / total) * 100);
 }
 
+function formatRating(value) {
+	const n = Number(value || 0);
+	if (!n) return "—";
+	return `${n.toFixed(1)}★`;
+}
+
+function formatPercent(value) {
+	const n = Number(value || 0);
+	if (!Number.isFinite(n)) return "0%";
+	return `${n}%`;
+}
+
 export default function AdminDashboard() {
 	const navigate = useNavigate();
 
@@ -120,6 +132,14 @@ export default function AdminDashboard() {
 	const completionRate = percent(metrics?.completedQuotes ?? 0, totalQuotes);
 	const approvalRate = percent(metrics?.approvedReviews ?? 0, totalReviews);
 
+	const averageRating = metrics?.averageApprovedRating ?? 0;
+	const averageRatingLast30Days =
+		metrics?.averageApprovedRatingLast30Days ?? 0;
+
+	const reviewSubmissionRate = metrics?.reviewSubmissionRate ?? 0;
+	const reviewSubmissionRateLast30Days =
+		metrics?.reviewSubmissionRateLast30Days ?? 0;
+
 	const recentActivity = [
 		{
 			label: "Quotes in last 7 days",
@@ -134,7 +154,11 @@ export default function AdminDashboard() {
 			value: metrics?.completedQuotesLast30Days ?? 0,
 		},
 		{
-			label: "Reviews in last 30 days",
+			label: "Review requests in last 30 days",
+			value: metrics?.reviewRequestsSentLast30Days ?? 0,
+		},
+		{
+			label: "Reviews submitted in last 30 days",
 			value: metrics?.reviewsLast30Days ?? 0,
 		},
 		{
@@ -151,7 +175,7 @@ export default function AdminDashboard() {
 				<div>
 					<h1 className={styles.h1}>Dashboard</h1>
 					<p className={styles.subhead}>
-						A quick overview of quotes and reviews.
+						A quick overview of quotes, reviews, and conversion.
 					</p>
 				</div>
 
@@ -175,23 +199,23 @@ export default function AdminDashboard() {
 				</div>
 
 				<div className={styles.card}>
-					<div className={styles.cardLabel}>Pending Reviews</div>
-					<div className={styles.cardValue}>
-						{metrics?.pendingReviews ?? 0}
-					</div>
-				</div>
-
-				<div className={styles.card}>
-					<div className={styles.cardLabel}>Approved Reviews</div>
-					<div className={styles.cardValue}>
-						{metrics?.approvedReviews ?? 0}
-					</div>
-				</div>
-
-				<div className={styles.card}>
 					<div className={styles.cardLabel}>Completed Quotes</div>
 					<div className={styles.cardValue}>
 						{metrics?.completedQuotes ?? 0}
+					</div>
+				</div>
+
+				<div className={styles.card}>
+					<div className={styles.cardLabel}>Review Requests Sent</div>
+					<div className={styles.cardValue}>
+						{metrics?.reviewRequestsSent ?? 0}
+					</div>
+				</div>
+
+				<div className={styles.card}>
+					<div className={styles.cardLabel}>Reviews Submitted</div>
+					<div className={styles.cardValue}>
+						{metrics?.submittedReviews ?? 0}
 					</div>
 				</div>
 			</div>
@@ -211,11 +235,36 @@ export default function AdminDashboard() {
 
 				<div className={styles.snapshotCard}>
 					<div className={styles.snapshotLabel}>
+						Review Submission Rate
+					</div>
+					<div className={styles.snapshotValue}>
+						{formatPercent(reviewSubmissionRate)}
+					</div>
+					<div className={styles.snapshotSub}>
+						Submitted reviews vs review requests sent
+						<br />
+						Last 30 days:{" "}
+						{formatPercent(reviewSubmissionRateLast30Days)}
+					</div>
+				</div>
+
+				<div className={styles.snapshotCard}>
+					<div className={styles.snapshotLabel}>
 						Review Approval Rate
 					</div>
 					<div className={styles.snapshotValue}>{approvalRate}%</div>
 					<div className={styles.snapshotSub}>
 						Approved out of all submitted reviews
+					</div>
+				</div>
+
+				<div className={styles.snapshotCard}>
+					<div className={styles.snapshotLabel}>Average Rating</div>
+					<div className={styles.snapshotValue}>
+						{formatRating(averageRating)}
+					</div>
+					<div className={styles.snapshotSub}>
+						Last 30 days: {formatRating(averageRatingLast30Days)}
 					</div>
 				</div>
 			</div>

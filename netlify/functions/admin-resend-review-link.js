@@ -49,30 +49,51 @@ function createTransporter() {
 	});
 }
 
+function escapeHtml(s = "") {
+	return String(s)
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#039;");
+}
+
 function buildReviewEmailHtml({ name, service, reviewLink }) {
 	return `
-	<div style="font-family:Arial,sans-serif;">
-		<h2>We'd love your feedback ⭐</h2>
-		<p>Hi ${name || "there"},</p>
-		<p>
-			If you have a minute, please leave us a quick review for your ${service}.
+	<div style="font-family:Arial,sans-serif;line-height:1.4;color:#111;">
+		<h2 style="margin:0 0 10px;">We'd love your feedback ⭐</h2>
+		<p style="margin:0 0 12px;">Hi ${escapeHtml(name || "there")},</p>
+		<p style="margin:0 0 12px;">
+			If you have a minute, please leave us a quick review for your ${escapeHtml(service || "project")}.
 		</p>
-		<p>
+		<p style="margin:16px 0;">
 			<a href="${reviewLink}" 
-			   style="padding:12px 16px;background:#111;color:#fff;text-decoration:none;border-radius:8px;">
+			   style="display:inline-block;padding:12px 16px;background:#111;color:#fff;text-decoration:none;border-radius:8px;">
 				Leave a review
 			</a>
 		</p>
-		<p style="font-size:13px;color:#555;">
+		<p style="font-size:13px;color:#555;margin:16px 0 0;">
 			This link expires in 30 days.
 		</p>
 	</div>
 	`;
 }
 
+function buildActivityBase(quote, now) {
+	return {
+		quoteId: quote._id,
+		quoteIdString: String(quote._id),
+		clientName: quote.name || "",
+		clientEmail: quote.email || "",
+		service: quote.service || "",
+		createdAt: now,
+		source: "admin",
+	};
+}
+
 export const handler = async (event) => {
 	try {
-		if (event.httpMethod !== "PATCH") {
+		if (event.httpMethod !== "PATCH" && event.httpMethod !== "POST") {
 			return json(405, { ok: false, error: "Method Not Allowed" });
 		}
 
@@ -87,9 +108,11 @@ export const handler = async (event) => {
 		}
 
 		const db = await getDb();
+		const quotes = db.collection("quotes");
+		const activity = db.collection("activity");
 		const _id = new ObjectId(quoteId);
 
-		const quote = await db.collection("quotes").findOne({ _id });
+		const quote = await quotes.findOne({ _id });
 		if (!quote) return json(404, { ok: false, error: "Quote not found" });
 
 		if (quote.status !== "completed") {
@@ -100,8 +123,18 @@ export const handler = async (event) => {
 			return json(400, { ok: false, error: "No client email on file" });
 		}
 
+		if (quote.review?.submittedAt || quote.review?.reviewId) {
+			return json(400, {
+				ok: false,
+				error: "Review already submitted for this quote",
+			});
+		}
+
 		const secret = process.env.REVIEW_TOKEN_SECRET;
-		const ttlDays = Number(process.env.REVIEW_TOKEN_TTL_DAYS) || 30;
+		const ttlDaysRaw = Number(process.env.REVIEW_TOKEN_TTL_DAYS);
+		const ttlDays =
+			Number.isFinite(ttlDaysRaw) && ttlDaysRaw > 0 ? ttlDaysRaw : 30;
+
 		const siteUrl = String(process.env.PUBLIC_SITE_URL || "").replace(
 			/\/+$/,
 			"",
@@ -122,7 +155,7 @@ export const handler = async (event) => {
 			now.getTime() + ttlDays * 24 * 60 * 60 * 1000,
 		);
 
-		await db.collection("quotes").updateOne(
+		await quotes.updateOne(
 			{ _id },
 			{
 				$set: {
@@ -138,7 +171,7 @@ export const handler = async (event) => {
 		const transporter = createTransporter();
 		if (transporter) {
 			await transporter.sendMail({
-				from: `"Manny’s Painting" <${process.env.SMTP_USER}>`,
+				from: `"${process.env.NOTIFY_EMAIL_FROM_NAME || "Manny’s Painting"}" <${process.env.SMTP_USER}>`,
 				to: quote.email,
 				replyTo: process.env.SMTP_USER,
 				subject:
@@ -149,7 +182,18 @@ export const handler = async (event) => {
 					reviewLink,
 				}),
 			});
+		} else {
+			console.log("📧 Review resend email skipped: missing SMTP config");
 		}
+
+		await activity.insertOne({
+			...buildActivityBase(quote, now),
+			type: "review_requested",
+			title: "Review request re-sent",
+			message: "Review email re-sent to client from admin",
+			reviewStatus: quote.review?.status || "",
+			toStatus: quote.status || "",
+		});
 
 		return json(200, { ok: true });
 	} catch (err) {

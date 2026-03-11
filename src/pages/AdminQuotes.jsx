@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getToken, clearToken } from "../lib/adminAuth";
 import AdminNav from "../components/AdminNav";
 import QuoteDetailDrawer from "../components/QuoteDetailDrawer";
@@ -32,6 +32,7 @@ const STATUS_OPTIONS = [
 
 export default function AdminQuotes() {
 	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	const [items, setItems] = useState([]);
 	const [total, setTotal] = useState(0);
@@ -42,6 +43,8 @@ export default function AdminQuotes() {
 	const [draftStatus, setDraftStatus] = useState({});
 	const [savingIds, setSavingIds] = useState(() => new Set());
 	const [selectedQuote, setSelectedQuote] = useState(null);
+
+	const quoteIdFromUrl = String(searchParams.get("quote") || "").trim();
 
 	const totalPages = useMemo(
 		() => Math.max(1, Math.ceil(total / LIMIT)),
@@ -125,9 +128,27 @@ export default function AdminQuotes() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [page]);
 
+	useEffect(() => {
+		if (!quoteIdFromUrl || !items.length) return;
+
+		const match = items.find((q) => String(q._id) === quoteIdFromUrl);
+		if (match) {
+			setSelectedQuote(match);
+		}
+	}, [quoteIdFromUrl, items]);
+
 	function openQuote(quoteId) {
 		const match = items.find((q) => q._id === quoteId);
 		setSelectedQuote(match || null);
+
+		if (quoteId) {
+			setSearchParams({ quote: quoteId });
+		}
+	}
+
+	function closeQuote() {
+		setSelectedQuote(null);
+		setSearchParams({});
 	}
 
 	async function saveQuoteStatus(quoteId) {
@@ -207,6 +228,7 @@ export default function AdminQuotes() {
 			});
 		}
 	}
+
 	async function resendReviewLink(quoteId) {
 		setError("");
 
@@ -518,7 +540,8 @@ export default function AdminQuotes() {
 					}))
 				}
 				onSaveStatus={saveQuoteStatus}
-				onClose={() => setSelectedQuote(null)}
+				onResendReviewLink={resendReviewLink}
+				onClose={closeQuote}
 			/>
 		</div>
 	);

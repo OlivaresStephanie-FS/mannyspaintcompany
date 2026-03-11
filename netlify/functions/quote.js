@@ -91,6 +91,30 @@ function escapeHtml(s = "") {
 		.replace(/'/g, "&#039;");
 }
 
+function buildActivityDoc({
+	now,
+	quoteId,
+	name,
+	email,
+	service,
+	status = "new",
+	source = "website",
+}) {
+	return {
+		type: "quote_submitted",
+		title: "Quote submitted",
+		message: "New quote request submitted from website",
+		source,
+		createdAt: now,
+		quoteId,
+		quoteIdString: String(quoteId),
+		clientName: name || "",
+		clientEmail: email || "",
+		service: service || "",
+		toStatus: status,
+	};
+}
+
 export const handler = async (event) => {
 	try {
 		if (event.httpMethod !== "POST") {
@@ -140,15 +164,12 @@ export const handler = async (event) => {
 			service: payload.service,
 			description: payload.description,
 			uploads: cleanedUploads,
-
 			submittedAt: payload.submittedAt
 				? new Date(payload.submittedAt)
 				: now,
-
 			status: "new",
 			statusUpdatedAt: now,
 			completedAt: null,
-
 			review: {
 				requestedAt: null,
 				tokenHash: null,
@@ -157,8 +178,8 @@ export const handler = async (event) => {
 				reviewId: null,
 				status: null,
 				moderatedAt: null,
+				rating: null,
 			},
-
 			source: "website",
 		};
 
@@ -167,23 +188,18 @@ export const handler = async (event) => {
 
 		console.log("✅ Saved to MongoDB:", quoteId);
 
-		await activity.insertOne({
-			type: "quote_submitted",
-			title: "Quote submitted",
-			message: "New quote request submitted from website",
-			source: "website",
-			createdAt: now,
-			quoteId: result.insertedId,
-			quoteIdString: quoteId,
-			clientName: doc.name || "",
-			clientEmail: doc.email || "",
-			service: doc.service || "",
-			status: "new",
-		});
+		await activity.insertOne(
+			buildActivityDoc({
+				now,
+				quoteId: result.insertedId,
+				name: doc.name,
+				email: doc.email,
+				service: doc.service,
+				status: "new",
+				source: "website",
+			}),
+		);
 
-		// ----------------------------
-		// EMAIL NOTIFICATIONS
-		// ----------------------------
 		const {
 			SMTP_USER,
 			ADMIN_NOTIFY_EMAILS,

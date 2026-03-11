@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { getToken, clearToken } from "../lib/adminAuth";
 import styles from "./QuoteDetailDrawer.module.css";
 
 function formatDate(v) {
@@ -25,6 +27,9 @@ export default function QuoteDetailDrawer({
 	onSaveStatus,
 	onClose,
 }) {
+	const [sendingReview, setSendingReview] = useState(false);
+	const [reviewMessage, setReviewMessage] = useState("");
+
 	if (!quote) return null;
 
 	const uploads = Array.isArray(quote.uploads) ? quote.uploads : [];
@@ -33,6 +38,72 @@ export default function QuoteDetailDrawer({
 	const draft = draftStatus[quote._id] || currentStatus;
 	const busy = savingIds.has(quote._id);
 	const changed = draft !== currentStatus;
+
+	const reviewAlreadyRequested = Boolean(review.requestedAt);
+	const isCompleted =
+		currentStatus === "completed" || Boolean(quote.completedAt);
+	const hasEmail = Boolean(String(quote.email || "").trim());
+	const canSendReviewRequest = Boolean(quote._id && hasEmail && isCompleted);
+
+	const reviewButtonLabel = reviewAlreadyRequested
+		? "Resend Review Request"
+		: "Send Review Request";
+
+	async function handleSendReviewRequest() {
+		if (!canSendReviewRequest || sendingReview) return;
+
+		setSendingReview(true);
+		setReviewMessage("");
+
+		try {
+			const token = String(getToken() || "").trim();
+
+			if (!token) {
+				clearToken();
+				setReviewMessage("Admin session expired. Please log in again.");
+				return;
+			}
+
+			const res = await fetch(
+				"/.netlify/functions/admin-resend-review-link",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify({
+						quoteId: quote._id,
+					}),
+				},
+			);
+
+			if (res.status === 401) {
+				clearToken();
+				setReviewMessage("Admin session expired. Please log in again.");
+				return;
+			}
+
+			const data = await res.json().catch(() => ({}));
+
+			if (!res.ok || !data.ok) {
+				throw new Error(data?.error || "Failed to send review request");
+			}
+
+			setReviewMessage(
+				reviewAlreadyRequested
+					? "Review request re-sent successfully."
+					: "Review request sent successfully.",
+			);
+		} catch (err) {
+			setReviewMessage(
+				err?.message ||
+					"There was a problem sending the review request.",
+			);
+		} finally {
+			setSendingReview(false);
+		}
+	}
 
 	return (
 		<>
@@ -189,16 +260,6 @@ export default function QuoteDetailDrawer({
 							<div className={styles.value}>
 								{formatDate(review.requestedAt) || "Not sent"}
 							</div>
-							<div>
-								<div>
-									<div className={styles.label}>Rating</div>
-									<div className={styles.value}>
-										{review.rating
-											? "⭐".repeat(review.rating)
-											: "—"}
-									</div>
-								</div>
-							</div>
 						</div>
 
 						<div>
@@ -206,6 +267,15 @@ export default function QuoteDetailDrawer({
 							<div className={styles.value}>
 								{formatDate(review.submittedAt) ||
 									"Not submitted"}
+							</div>
+						</div>
+
+						<div>
+							<div className={styles.label}>Rating</div>
+							<div className={styles.value}>
+								{review.rating
+									? "⭐".repeat(review.rating)
+									: "—"}
 							</div>
 						</div>
 
@@ -222,6 +292,37 @@ export default function QuoteDetailDrawer({
 								{formatDate(quote.completedAt) || "-"}
 							</div>
 						</div>
+					</div>
+
+					<div className={styles.actionBlock}>
+						<div className={styles.label}>
+							Review Request Action
+						</div>
+
+						<div className={styles.statusRow}>
+							<button
+								type="button"
+								className={styles.saveBtn}
+								onClick={handleSendReviewRequest}
+								disabled={
+									!canSendReviewRequest || sendingReview
+								}>
+								{sendingReview ? "Sending…" : reviewButtonLabel}
+							</button>
+						</div>
+
+						{!canSendReviewRequest ? (
+							<div className={styles.actionHelp}>
+								Review requests can be sent after the quote is
+								completed and an email address is available.
+							</div>
+						) : null}
+
+						{reviewMessage ? (
+							<div className={styles.actionMessage}>
+								{reviewMessage}
+							</div>
+						) : null}
 					</div>
 				</div>
 			</aside>

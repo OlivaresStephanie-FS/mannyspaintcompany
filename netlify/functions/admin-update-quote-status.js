@@ -14,6 +14,17 @@ const ALLOWED = new Set([
 
 const ORDER = ["new", "contacted", "scheduled", "completed"];
 
+function json(statusCode, body) {
+	return {
+		statusCode,
+		headers: {
+			"Content-Type": "application/json",
+			"Cache-Control": "no-store",
+		},
+		body: JSON.stringify(body),
+	};
+}
+
 function isAllowedTransition(fromStatus, toStatus) {
 	const from = fromStatus || "new";
 	const to = toStatus;
@@ -122,55 +133,30 @@ function buildActivityBase(current, now) {
 export const handler = async (event) => {
 	try {
 		if (event.httpMethod !== "PATCH") {
-			return {
-				statusCode: 405,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-store",
-				},
-				body: JSON.stringify({
-					ok: false,
-					error: "Method Not Allowed",
-				}),
-			};
+			return json(405, {
+				ok: false,
+				error: "Method Not Allowed",
+			});
 		}
 
 		if (!isValidBearer(event)) {
-			return {
-				statusCode: 401,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-store",
-				},
-				body: JSON.stringify({ ok: false, error: "Unauthorized" }),
-			};
+			return json(401, {
+				ok: false,
+				error: "Unauthorized",
+			});
 		}
 
 		const { quoteId, status } = JSON.parse(event.body || "{}");
 
 		if (!quoteId || typeof quoteId !== "string" || quoteId.length !== 24) {
-			return {
-				statusCode: 400,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-store",
-				},
-				body: JSON.stringify({
-					ok: false,
-					error: "Invalid quoteId format",
-				}),
-			};
+			return json(400, {
+				ok: false,
+				error: "Invalid quoteId format",
+			});
 		}
 
 		if (!ALLOWED.has(status)) {
-			return {
-				statusCode: 400,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-store",
-				},
-				body: JSON.stringify({ ok: false, error: "Invalid status" }),
-			};
+			return json(400, { ok: false, error: "Invalid status" });
 		}
 
 		const db = await getDb();
@@ -182,30 +168,16 @@ export const handler = async (event) => {
 		const current = await quotes.findOne({ _id });
 
 		if (!current) {
-			return {
-				statusCode: 404,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-store",
-				},
-				body: JSON.stringify({ ok: false, error: "Quote not found" }),
-			};
+			return json(404, { ok: false, error: "Quote not found" });
 		}
 
 		const fromStatus = current.status || "new";
 
 		if (!isAllowedTransition(fromStatus, status)) {
-			return {
-				statusCode: 400,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-store",
-				},
-				body: JSON.stringify({
-					ok: false,
-					error: `Invalid status transition: ${fromStatus} → ${status}`,
-				}),
-			};
+			return json(400, {
+				ok: false,
+				error: `Invalid status transition: ${fromStatus} → ${status}`,
+			});
 		}
 
 		const now = new Date();
@@ -231,7 +203,9 @@ export const handler = async (event) => {
 			siteUrl &&
 			secret &&
 			!current.review?.requestedAt &&
-			!current.review?.tokenHash;
+			!current.review?.tokenHash &&
+			!current.review?.submittedAt &&
+			!current.review?.reviewId;
 
 		const existingExpiresMs = current.review?.tokenExpiresAt
 			? new Date(current.review.tokenExpiresAt).getTime()
@@ -239,7 +213,7 @@ export const handler = async (event) => {
 
 		const hasBadExpiry =
 			!Number.isFinite(existingExpiresMs) ||
-			existingExpiresMs <= 24 * 60 * 60 * 1000;
+			existingExpiresMs <= now.getTime();
 
 		const shouldRepairExpiry =
 			status === "completed" &&
@@ -345,6 +319,7 @@ export const handler = async (event) => {
 				type: "review_requested",
 				title: "Review request sent",
 				message: "Review email sent to client",
+				reviewStatus: current.review?.status || "",
 				toStatus: status,
 			});
 		}
@@ -355,24 +330,13 @@ export const handler = async (event) => {
 
 		const updated = await quotes.findOne({ _id });
 
-		return {
-			statusCode: 200,
-			headers: {
-				"Content-Type": "application/json",
-				"Cache-Control": "no-store",
-			},
-			body: JSON.stringify({ ok: true, quote: updated }),
-		};
+		return json(200, { ok: true, quote: updated });
 	} catch (err) {
 		console.error("admin-update-quote-status error:", err);
 
-		return {
-			statusCode: 500,
-			headers: {
-				"Content-Type": "application/json",
-				"Cache-Control": "no-store",
-			},
-			body: JSON.stringify({ ok: false, error: "Server error" }),
-		};
+		return json(500, {
+			ok: false,
+			error: "Server error",
+		});
 	}
 };

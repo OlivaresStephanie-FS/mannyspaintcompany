@@ -141,6 +141,20 @@
     word-break: break-all;
 }
 
+.linkBtn {
+    all: unset;
+    display: inline;
+    font-size: 14px;
+    color: #111;
+    word-break: break-all;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.linkBtn:hover {
+    opacity: 0.75;
+}
+
 .empty {
     font-size: 14px;
     color: var(--muted);

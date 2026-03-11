@@ -46,6 +46,8 @@ function buildActivityBase(review, now) {
 		service: review.service || "",
 		createdAt: now,
 		source: "admin",
+		rating: Number(review.rating || 0) || 0,
+		ratingSnapshot: Number(review.rating || 0) || 0,
 	};
 }
 
@@ -115,6 +117,7 @@ export const handler = async (event) => {
 				message: "Review was approved for public display",
 				fromStatus: previousStatus,
 				toStatus: status,
+				reviewStatus: status,
 			});
 		}
 
@@ -126,6 +129,7 @@ export const handler = async (event) => {
 				message: "Review was rejected during moderation",
 				fromStatus: previousStatus,
 				toStatus: status,
+				reviewStatus: status,
 			});
 		}
 
