@@ -12,7 +12,7 @@ export default function Footer() {
 					Serving NYC / NJ • Licensed & Insured
 				</div>
 				<div className={styles.copy}>
-					© {new Date().getFullYear()} Soli.NYC All rights reserved.
+					© {new Date().getFullYear()} SOLINYC LLC All rights reserved.
 				</div>
 				<div className={styles.admin}>
 					<Link to="/admin/login">Admin</Link>

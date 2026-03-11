@@ -126,8 +126,7 @@ export default function Home() {
 						</div>
 						<div
 							className={`${styles.small} ${styles.contactHint}`}>
-							Replace these placeholders with your real business
-							info.
+							We can add any information you'd like here.
 						</div>
 					</div>
 				</div>
