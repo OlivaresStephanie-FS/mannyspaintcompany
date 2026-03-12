@@ -182,36 +182,36 @@ Security protections include:
 mannyspaintcompany
 │
 ├── netlify
-│ └── functions
-│ ├── quote.js
-│ ├── public-submit-review.js
-│ ├── public-reviews.js
-│ ├── admin-login.js
-│ ├── admin-quotes.js
-│ ├── admin-reviews.js
-│ ├── admin-update-quote-status.js
-│ ├── admin-update-review-status.js
-│ └── cloudinary-sign.js
+│   └── functions
+│       ├── quote.js
+│       ├── public-submit-review.js
+│       ├── public-reviews.js
+│       ├── admin-login.js
+│       ├── admin-quotes.js
+│       ├── admin-reviews.js
+│       ├── admin-update-quote-status.js
+│       ├── admin-update-review-status.js
+│       └── cloudinary-sign.js
 │
 ├── src
-│ ├── components
-│ │ ├── Navbar.jsx
-│ │ ├── Footer.jsx
-│ │ └── Review.jsx
-│ │
-│ ├── pages
-│ │ ├── Home.jsx
-│ │ ├── Gallery.jsx
-│ │ ├── Reviews.jsx
-│ │ ├── AdminLogin.jsx
-│ │ ├── AdminQuotes.jsx
-│ │ └── AdminReviews.jsx
-│ │
-│ ├── lib
-│ │ └── adminAuth.js
-│ │
-│ ├── App.jsx
-│ └── main.jsx
+│   ├── components
+│   │   ├── Navbar.jsx
+│   │   ├── Footer.jsx
+│   │   └── Review.jsx
+│   │
+│   ├── pages
+│   │   ├── Home.jsx
+│   │   ├── Gallery.jsx
+│   │   ├── Reviews.jsx
+│   │   ├── AdminLogin.jsx
+│   │   ├── AdminQuotes.jsx
+│   │   └── AdminReviews.jsx
+│   │
+│   ├── lib
+│   │   └── adminAuth.js
+│   │
+│   ├── App.jsx
+│   └── main.jsx
 │
 ├── netlify.toml
 ├── package.json
