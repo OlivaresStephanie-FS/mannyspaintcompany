@@ -1,23 +1,42 @@
-## Contractor Platform README.md
-
-````markdown
 # Manny’s Painting Company — Contractor Quote & Review Platform
+
+![React](https://img.shields.io/badge/React-Vite-blue?logo=react)
+![Netlify](https://img.shields.io/badge/Netlify-Functions-teal?logo=netlify)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?logo=mongodb)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-Image%20Storage-blue?logo=cloudinary)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 A production-grade contractor operations platform that allows customers to request service quotes, upload project photos, and submit post-job reviews while providing contractors with a secure admin dashboard to manage leads and customer feedback.
 
-The platform replaces manual contractor workflows such as phone calls, emails, and spreadsheets with a structured digital pipeline for lead intake, job tracking, and reputation management.
+This platform replaces manual contractor workflows (phone calls, emails, spreadsheets) with a **structured digital pipeline for lead intake, job tracking, and reputation management**.
 
-Built using a modern serverless architecture with Netlify Functions, MongoDB Atlas, and Cloudinary.
+Built using a **modern serverless architecture** with Netlify Functions, MongoDB Atlas, and Cloudinary.
 
 ---
 
-## 🚀 Live Platform
+# 🚀 Live Platform
 
 🌐 https://mannyspaintingcompany.com
 
 ---
 
-## 🧰 Tech Stack
+# 📸 Screenshots
+
+## Homepage
+
+_(add screenshot later)_
+
+## Admin Dashboard
+
+_(add screenshot later)_
+
+## Reviews Page
+
+_(add screenshot later)_
+
+---
+
+# 🧰 Tech Stack
 
 ### Frontend
 
@@ -262,4 +281,7 @@ Stephanie Olivares
 
 Full-Stack Developer building real-world operational platforms using modern serverless architecture.
 ```
-````
+
+```
+
+```
