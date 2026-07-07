@@ -32,3 +32,8 @@ dist-ssr
 .env.*
 .env.backup
 !.env.example
+
+# Local AI project context
+AI_CONTEXT.md
+AI_CHANGELOG.md
+public/wireframe_reference.html

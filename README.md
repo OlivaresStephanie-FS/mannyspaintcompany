@@ -1,282 +1,206 @@
-# Manny’s Painting Company — Contractor Quote & Review Platform
+# Manny's Painting Company
 
-A production-grade contractor operations platform that allows customers to request service quotes, upload project photos, and submit post-job reviews — while providing contractors with a secure admin dashboard to manage leads and customer feedback.
+Production website and customer management platform for [Manny's Painting Company](https://mannyspaintingcompany.com), a family-owned painting contractor serving New York City and the Tri-State area.
 
-The platform replaces manual contractor workflows (phone calls, emails, spreadsheets) with a **structured digital pipeline for lead intake, job tracking, and reputation management**.
+The application gives customers a professional way to explore services, view project work, read reviews, and request quotes with photo uploads. Internally, it provides a secure admin portal for managing leads, reviews, and business activity.
 
-Built using a **modern serverless architecture** with Netlify Functions, MongoDB Atlas, and Cloudinary.
-
----
-
-# 🚀 Live Platform
-
-https://mannyspaintingcompany.com
+Built with React and Vite on the frontend, Netlify Functions on the backend, MongoDB Atlas for data storage, and Cloudinary for secure file uploads.
 
 ---
 
-# 🧰 Tech Stack
+## Features
 
-## Frontend
+### Public Website
 
-- React (Vite)
-- React Router
-- Component-driven architecture
-- Responsive UI
-
-## Backend
-
-- Netlify Functions (serverless Node.js)
-- MongoDB Atlas
-- JWT authentication
-
-## Infrastructure
-
-- Cloudinary (secure image uploads)
-- Nodemailer (SMTP email notifications)
-- Netlify environment variables
-- Netlify secrets scanning
-
----
-
-# ✨ Core Features
-
-## Quote Request System
-
-Customers can submit painting project requests including:
-
+- Responsive marketing website
+- Services overview
+- Project gallery
+- Customer reviews
+- Quote request form with file uploads
 - Contact information
-- Service type
-- Project description
-- Photo uploads
+- Mobile responsive design
 
-Images upload securely through **Cloudinary signed uploads**, while quote data is stored in **MongoDB Atlas**.
+### Admin Dashboard
 
-After submission:
+- Secure admin authentication
+- Quote management
+- Quote status updates
+- Review moderation
+- Dashboard analytics
+- Activity tracking
 
-- Admin notification email is sent
-- Optional client confirmation email is sent
+### Backend
 
----
-
-# 🧑‍💼 Admin Quote Dashboard
-
-Route:
-
-/admin
-
-Features:
-
-- Secure JWT authentication
-- Pagination for large datasets
-- Image preview thumbnails
-- Quote lifecycle management
-
-Quote statuses:
-
-new
-contacted
-scheduled
-completed
-archived
-
-All updates are validated server-side and persisted to MongoDB.
+- Netlify Functions API
+- MongoDB Atlas
+- Cloudinary image uploads
+- Email notifications
 
 ---
 
-# ⭐ Customer Review System
+## Tech Stack
 
-After a job is completed, customers can submit a review through a secure link.
+### Frontend
 
-Route:
+- React
+- Vite
+- CSS Modules
 
-/review/:quoteId
+### Backend
 
-Review fields:
+- Netlify Functions
+- MongoDB Atlas
+- Cloudinary
+- Nodemailer
 
-- 1–5 star rating
-- Optional text feedback
-- Optional name
-- Associated service type
+### Deployment
 
-New reviews default to:
-
-status: "pending"
-
----
-
-# 🛡 Review Moderation
-
-Admins moderate reviews through:
-
-/admin/reviews
-
-Moderation states:
-
-pending
-approved
-rejected
-
-Approved reviews appear on the public reviews page.
+- Netlify
 
 ---
 
-# 🌍 Public Reviews Page
+## Local Development
 
-Route:
+Install dependencies:
 
-/reviews
+```bash
+npm install
+```
 
-Displays approved customer reviews including:
+Start the development server:
 
-- Star rating
-- Review text
-- Customer name
-- Service type
-- Submission date
+```bash
+npm run dev:netlify
+```
 
-Data is served through a **cached Netlify function** for performance.
+This project should be run using **Netlify Dev** because it depends on Netlify Functions for quotes, reviews, uploads, authentication, and admin features. Running `npm run dev` alone will not provide the serverless API layer.
 
----
+The application is typically available at:
 
-# 🏗 Architecture Overview
-
-React Frontend
-│
-▼
-Netlify Functions (Serverless API)
-│
-▼
-MongoDB Atlas
-│
-├── quotes collection
-└── reviews collection
-
-Image uploads are handled through **Cloudinary signed uploads**.
-
-Admin operations are protected using **JWT authentication**.
+```
+http://localhost:8888
+```
 
 ---
 
-# 🔐 Security Model
+## Environment Variables
 
-Admin endpoints require a JWT token.
+Configure these in Netlify or a local `.env` file. Do not commit secret values to Git.
 
-Authorization: Bearer <JWT>
+### Database
 
-Tokens are issued by the admin login function and verified using:
+- `MONGODB_URI`
+- `MONGODB_DB`
 
-ADMIN_JWT_SECRET
+### Cloudinary
 
-Security protections include:
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+- `CLOUDINARY_FOLDER`
 
-- Server-side validation
-- JWT verification
-- Netlify environment variables
-- Secrets scanning
-- `.env` excluded from Git
+### Admin Authentication
+
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD_HASH`
+- `ADMIN_JWT_SECRET`
+
+### Email (SMTP)
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `ADMIN_NOTIFY_EMAILS`
+- `NOTIFY_EMAIL_FROM_NAME`
+- `CLIENT_CONFIRM_ENABLED`
+- `CLIENT_CONFIRM_SUBJECT`
+
+### Reviews
+
+- `REVIEW_TOKEN_SECRET`
+- `REVIEW_TOKEN_TTL_DAYS`
+- `REVIEW_EMAIL_ENABLED`
+- `REVIEW_EMAIL_SUBJECT`
+- `PUBLIC_SITE_URL`
 
 ---
 
-# 📁 Project Structure
+## Project Structure
 
-mannyspaintcompany
-│
-├── netlify
-│   └── functions
-│       ├── quote.js
-│       ├── public-submit-review.js
-│       ├── public-reviews.js
-│       ├── admin-login.js
-│       ├── admin-quotes.js
-│       ├── admin-reviews.js
-│       ├── admin-update-quote-status.js
-│       ├── admin-update-review-status.js
-│       └── cloudinary-sign.js
-│
-├── src
-│   ├── components
-│   │   ├── Navbar.jsx
-│   │   ├── Footer.jsx
-│   │   └── Review.jsx
-│   │
-│   ├── pages
-│   │   ├── Home.jsx
-│   │   ├── Gallery.jsx
-│   │   ├── Reviews.jsx
-│   │   ├── AdminLogin.jsx
-│   │   ├── AdminQuotes.jsx
-│   │   └── AdminReviews.jsx
-│   │
-│   ├── lib
-│   │   └── adminAuth.js
-│   │
-│   ├── App.jsx
-│   └── main.jsx
-│
-├── netlify.toml
+```
+mannyspaintcompany/
+├── netlify/
+│   └── functions/          # Serverless API (quotes, reviews, admin, uploads)
+├── public/                 # Static assets
+├── src/
+│   ├── components/         # Shared UI (Navbar, Footer, QuoteForm, etc.)
+│   ├── data/               # Shared public content (gallery project data)
+│   ├── lib/                # Frontend helpers (admin auth utilities)
+│   ├── pages/              # Route-level pages (public + admin)
+│   ├── styles/             # Global CSS and design tokens
+│   ├── App.jsx             # Application routing
+│   └── main.jsx            # React entry point
+├── netlify.toml            # Netlify build, functions, and redirects
 ├── package.json
 └── vite.config.js
+```
+
+### Key Public Routes
+
+| Route | Purpose |
+|---|---|
+| `/` | Homepage |
+| `/gallery` | Project gallery |
+| `/reviews` | Approved customer reviews |
+| `/review/:quoteId` | Secure review submission link |
+
+### Key Admin Routes
+
+| Route | Purpose |
+|---|---|
+| `/admin/login` | Admin authentication |
+| `/admin` | Quote management |
+| `/admin/reviews` | Review moderation |
+| `/admin/dashboard` | Business analytics |
+| `/admin/activity` | Activity log |
 
 ---
 
-# 💻 Local Development
+## Current Status
 
-Run the Netlify development server:
+The **Public Site Polish** milestone has been completed.
 
-netlify dev --functions netlify/functions
+Recent work includes:
 
-Application runs at:
+- Homepage redesign with hero, services, differentiators, quote section, and reviews
+- Production-ready public copy and Tri-State service area messaging
+- SVG service icons and improved services card hierarchy
+- Recent Projects preview section on the homepage
+- Reviews section with loading skeleton and empty state
+- Quote form styling aligned with the public site design system
+- Expanded professional footer with navigation and contact details
+- Improved typography, spacing, and tablet/mobile responsiveness
+- Shared gallery project data prepared for real client photos
 
-http://localhost:8888
-
----
-
-# ⚙️ Environment Variables
-
-Required production variables include:
-
-MONGODB_URI
-MONGODB_DB
-
-CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET
-CLOUDINARY_FOLDER
-
-ADMIN_USERNAME
-ADMIN_PASSWORD_HASH
-ADMIN_JWT_SECRET
-
-SMTP_HOST
-SMTP_PORT
-SMTP_USER
-SMTP_PASS
-
-ADMIN_NOTIFY_EMAILS
-CLIENT_CONFIRM_ENABLED
-CLIENT_CONFIRM_SUBJECT
-
-REVIEW_TOKEN_SECRET
-REVIEW_TOKEN_TTL_DAYS
-PUBLIC_SITE_URL
+The admin dashboard, Netlify Functions, quote workflow, review workflow, and upload pipeline remain stable and unchanged during this milestone.
 
 ---
 
-# 🚀 Deployment
+## Roadmap
 
-Hosted on **Netlify using serverless functions**.
+Upcoming milestones:
 
-Deployment pipeline includes:
-
-- Automatic builds from GitHub
-- Environment variable management
-- Secrets scanning protection
-- HTTPS enabled by default
+- **Branding & Assets** — Logo, favicon, real project photography, and visual identity refinements
+- **SEO & Marketing** — Meta tags, search optimization, and launch-ready marketing content
+- **UX Polish** — Navigation improvements, form success states, and interaction refinements
+- **Customer Experience** — Testimonials, content expansion, and stronger trust signals
+- **Production Readiness** — Performance, accessibility, security review, and final launch QA
 
 ---
 
-# 👩‍💻 Author
+## Author
 
 **Stephanie Olivares**
 
-Full-Stack Developer building real-world operational platforms using modern serverless architecture.
+Developed for Manny's Painting Company / SOLINYC LLC.
