@@ -1,37 +1,143 @@
 .wrap {
 	border-top: 1px solid var(--border);
-	background: #fff;
-	margin-top: 48px;
+	background: #111;
+	color: rgba(255, 255, 255, 0.72);
+	margin-top: 56px;
 }
 
 .inner {
-	padding: 24px 0;
-	color: var(--muted);
+	padding: 48px 0 28px;
 	font-size: 14px;
 }
 
-.title {
-	font-weight: 800;
-	color: var(--text);
+.grid {
+	display: grid;
+	grid-template-columns: 1.4fr 0.8fr 1fr;
+	gap: 36px;
 }
 
-.line {
-	margin-top: 6px;
+.brandCol {
+	min-width: 0;
+}
+
+.title {
+	font-size: 18px;
+	font-weight: 900;
+	color: #fff;
+	letter-spacing: -0.3px;
+}
+
+.tagline {
+	margin: 12px 0 0;
+	max-width: 360px;
+	line-height: 1.65;
+	color: rgba(255, 255, 255, 0.68);
+}
+
+.trust {
+	margin: 14px 0 0;
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--accent);
+	letter-spacing: 0.02em;
+}
+
+.colTitle {
+	margin-bottom: 14px;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.45);
+}
+
+.links {
+	display: grid;
+	gap: 10px;
+}
+
+.links a {
+	color: rgba(255, 255, 255, 0.82);
+	text-decoration: none;
+	font-weight: 600;
+	transition: color 0.15s ease;
+}
+
+.links a:hover {
+	color: var(--accent);
+}
+
+.contactList {
+	display: grid;
+	gap: 10px;
+}
+
+.contactLink {
+	color: #fff;
+	text-decoration: none;
+	font-weight: 700;
+	line-height: 1.45;
+	transition: color 0.15s ease;
+}
+
+.contactLink:hover {
+	color: var(--accent);
+}
+
+.contactMeta {
+	margin: 4px 0 0;
+	line-height: 1.6;
+	color: rgba(255, 255, 255, 0.55);
+}
+
+.bottom {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 36px;
+	padding-top: 22px;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .copy {
-	margin-top: 12px;
+	color: rgba(255, 255, 255, 0.45);
+	font-size: 13px;
 }
+
 .admin {
-	margin-top: 6px;
 	font-size: 12px;
 }
 
 .admin a {
-	color: #777;
+	color: rgba(255, 255, 255, 0.35);
 	text-decoration: none;
 }
 
 .admin a:hover {
+	color: rgba(255, 255, 255, 0.6);
 	text-decoration: underline;
+}
+
+@media (max-width: 920px) {
+	.inner {
+		padding: 40px 0 24px;
+	}
+
+	.grid {
+		grid-template-columns: 1fr;
+		gap: 28px;
+	}
+
+	.bottom {
+		flex-direction: column;
+		align-items: flex-start;
+		margin-top: 28px;
+	}
+}
+
+@media (max-width: 520px) {
+	.wrap {
+		margin-top: 40px;
+	}
 }

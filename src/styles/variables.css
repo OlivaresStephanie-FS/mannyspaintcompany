@@ -4,6 +4,11 @@
     --muted: #666666;
     --border: #eeeeee;
 
+    --accent: #d69a54;
+    --accent-dark: #b07d3f;
+    --warm-bg: #faf8f5;
+    --warm-border: #efe8df;
+
     --container: 1100px;
 
     --space-2: 8px;
@@ -12,4 +17,6 @@
     --space-6: 24px;
 
     --radius: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
 }
