@@ -37,3 +37,18 @@ dist-ssr
 AI_CONTEXT.md
 AI_CHANGELOG.md
 public/wireframe_reference.html
+ROADMAP.md
+
+# Cursor
+.cursor/
+
+# Claude / Anthropic
+CLAUDE.md
+
+# OpenAI
+CHATGPT.md
+
+# Local planning
+NOTES.md
+SCRATCH.md
+TODO.local.md
