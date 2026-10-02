@@ -1,13 +1,20 @@
 :root {
     --bg: #ffffff;
     --text: #111111;
-    --muted: #666666;
-    --border: #eeeeee;
+    --muted: #5c5c5c;
+    --border: #e6e6e6;
 
-    --accent: #d69a54;
-    --accent-dark: #b07d3f;
-    --warm-bg: #faf8f5;
-    --warm-border: #efe8df;
+    /* Primary action / brand black; secondary dark for hover & emphasis */
+    --accent: #111111;
+    --accent-dark: #2a2a2a;
+
+    /* Surface tokens (names retained; values are cool neutral) */
+    --warm-bg: #f6f6f6;
+    --warm-border: #e6e6e6;
+
+    /* Semantic: review stars only — not for brand chrome */
+    --star: #b8952e;
+    --star-off: #d7d7d7;
 
     --container: 1100px;
 
@@ -15,6 +22,7 @@
     --space-3: 12px;
     --space-4: 16px;
     --space-6: 24px;
+    --space-8: 32px;
 
     --radius: 12px;
     --radius-lg: 20px;

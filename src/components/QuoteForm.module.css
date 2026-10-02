@@ -2,10 +2,10 @@
 	display: grid;
 	gap: 16px;
 	padding: 24px;
-	border: 1px solid var(--warm-border);
+	border: 1px solid var(--border);
 	border-radius: var(--radius-lg);
 	background: #fff;
-	box-shadow: 0 10px 28px rgba(60, 45, 30, 0.05);
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
 }
 
 .row {
@@ -31,7 +31,7 @@
 .textarea {
 	padding: 12px 14px;
 	border-radius: 12px;
-	border: 1px solid #e0d6cc;
+	border: 1px solid var(--border);
 	outline: none;
 	font-size: 15px;
 	background: #fff;
@@ -51,7 +51,7 @@
 .select:focus,
 .textarea:focus {
 	border-color: var(--accent);
-	box-shadow: 0 0 0 3px rgba(214, 154, 84, 0.18);
+	box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.14);
 }
 
 .button {
@@ -59,17 +59,23 @@
 	border-radius: 999px;
 	border: none;
 	background: var(--accent);
-	color: #111;
+	color: #fff;
 	font-size: 15px;
 	font-weight: 800;
 	cursor: pointer;
-	box-shadow: 0 12px 28px rgba(214, 154, 84, 0.28);
-	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+	transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .button:hover:not(:disabled) {
 	transform: translateY(-1px);
-	box-shadow: 0 16px 32px rgba(214, 154, 84, 0.34);
+	background: var(--accent-dark);
+	box-shadow: 0 16px 32px rgba(0, 0, 0, 0.2);
+}
+
+.button:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
 }
 
 .button:disabled {
@@ -94,7 +100,7 @@
 }
 
 .uploadBox {
-	border: 1px dashed #d8cfc3;
+	border: 1px dashed #c8c8c8;
 	border-radius: 14px;
 	padding: 16px;
 	background: var(--warm-bg);
@@ -114,7 +120,7 @@
 	box-sizing: border-box;
 	padding: 11px 14px;
 	border-radius: 999px;
-	border: 1px solid #e0d6cc;
+	border: 1px solid var(--border);
 	background: #fff;
 	font-weight: 700;
 	font-size: 14px;
@@ -125,8 +131,13 @@
 }
 
 .uploadBtn:hover {
-	background: #faf6f1;
+	background: var(--warm-bg);
 	border-color: var(--accent);
+}
+
+.uploadBtn:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
 }
 
 .fileList {
@@ -141,7 +152,7 @@
 	gap: 10px;
 	align-items: center;
 	padding: 11px 13px;
-	border: 1px solid #eee;
+	border: 1px solid var(--border);
 	border-radius: 12px;
 	background: #fff;
 }
@@ -171,7 +182,7 @@
 	box-sizing: border-box;
 	padding: 8px 12px;
 	border-radius: 999px;
-	border: 1px solid #e0d6cc;
+	border: 1px solid var(--border);
 	background: #fff;
 	cursor: pointer;
 	font-weight: 700;
@@ -179,7 +190,12 @@
 }
 
 .removeBtn:hover {
-	background: #faf6f1;
+	background: var(--warm-bg);
+}
+
+.removeBtn:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
 }
 
 .hiddenInput {

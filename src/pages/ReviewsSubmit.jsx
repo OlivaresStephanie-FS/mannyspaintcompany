@@ -123,8 +123,7 @@ export default function ReviewsSubmit() {
 								key={n}
 								type="button"
 								onClick={() => setRating(n)}
-								className={styles.starBtn}
-								style={{ color: n <= rating ? "#f5b301" : "#cfcfcf" }}
+								className={`${styles.starBtn} ${n <= rating ? styles.starBtnOn : styles.starBtnOff}`}
 								aria-label={`${n} star`}
 							>
 								★

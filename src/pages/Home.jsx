@@ -10,7 +10,7 @@ import styles from "./Home.module.css";
 
 const TRUST_BADGES = [
 	"Free On-Site Estimates",
-	"Licensed & Insured",
+	"Fully Insured",
 	"NYC & Tri-State Area",
 	"Residential & Commercial",
 ];
@@ -70,7 +70,7 @@ const WHY_CHOOSE = [
 const CONTACT_HIGHLIGHTS = [
 	"Free estimates—on-site or from photos",
 	"Interior, exterior, repair, and turnover work",
-	"Licensed, insured, and family-owned",
+	"Fully insured and family-owned",
 ];
 
 const REVIEW_SKELETON_COUNT = 3;

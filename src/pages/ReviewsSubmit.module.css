@@ -50,7 +50,21 @@
 	line-height: 34px;
 	padding: 0;
 	user-select: none;
-	transition: transform 0.08s ease;
+	transition: transform 0.08s ease, color 0.1s ease;
+}
+
+.starBtnOn {
+	color: var(--star);
+}
+
+.starBtnOff {
+	color: var(--star-off);
+}
+
+.starBtn:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+	border-radius: 4px;
 }
 
 .starBtn:active {

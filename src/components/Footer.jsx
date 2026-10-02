@@ -19,7 +19,7 @@ export default function Footer() {
 							throughout New York City and the Tri-State area.
 						</p>
 						<p className={styles.trust}>
-							Licensed &amp; Insured
+							Fully Insured
 						</p>
 					</div>
 

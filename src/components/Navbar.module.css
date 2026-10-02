@@ -10,20 +10,63 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 16px;
-	min-height: 64px;
+	gap: 20px;
+	/* Logo frame is ~82px; keep bar modest with small vertical padding */
+	min-height: 96px;
+	padding-top: 6px;
+	padding-bottom: 6px;
 }
 
 .brand {
-	font-weight: 800;
-	letter-spacing: 0.2px;
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 1;
+	min-width: 0;
 	text-decoration: none;
 	color: var(--text);
 }
 
+/*
+  Source PNG (800×333) has large left/right transparent padding.
+  Measured content bbox ≈ 154–650 × 8–324 (497×317).
+  Clip to the content box and scale so artwork fills the frame —
+  without editing the asset file.
+*/
+.brandLogoClip {
+	--img-h: 333;
+	--content-w: 497;
+	--content-h: 317;
+	--pad-x: 154;
+	--pad-y: 8;
+	--frame-h: 82px;
+
+	position: relative;
+	display: block;
+	overflow: hidden;
+	height: var(--frame-h);
+	width: calc(var(--frame-h) * var(--content-w) / var(--content-h));
+	flex-shrink: 1;
+	max-width: min(200px, 46vw);
+}
+
+.brandLogo {
+	position: absolute;
+	display: block;
+	/* Scale so content height matches the clip frame */
+	height: calc(var(--frame-h) * var(--img-h) / var(--content-h));
+	width: auto;
+	max-width: none;
+	/* Shift so content bbox sits flush in the clip */
+	left: calc(-1 * var(--pad-x) * var(--frame-h) / var(--content-h));
+	top: calc(-1 * var(--pad-y) * var(--frame-h) / var(--content-h));
+	pointer-events: none;
+}
+
 .links {
 	display: flex;
-	gap: 14px;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 16px;
 }
 
 .link {
@@ -35,4 +78,38 @@
 .active {
 	color: var(--text);
 	font-weight: 800;
+}
+
+@media (max-width: 920px) {
+	.inner {
+		min-height: 88px;
+		gap: 16px;
+	}
+
+	.brandLogoClip {
+		--frame-h: 70px;
+		max-width: min(170px, 44vw);
+	}
+}
+
+@media (max-width: 520px) {
+	.inner {
+		min-height: 76px;
+		gap: 12px;
+		padding-top: 4px;
+		padding-bottom: 4px;
+	}
+
+	.brandLogoClip {
+		--frame-h: 56px;
+		max-width: min(140px, 42vw);
+	}
+
+	.links {
+		gap: 10px;
+	}
+
+	.link {
+		font-size: 14px;
+	}
 }

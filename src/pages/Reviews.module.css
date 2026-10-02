@@ -182,11 +182,11 @@
 }
 
 .starOn {
-	color: #f5b301;
+	color: var(--star);
 }
 
 .starOff {
-	color: #d7d7d7;
+	color: var(--star-off);
 }
 
 .meta {
