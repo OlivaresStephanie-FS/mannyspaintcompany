@@ -56,11 +56,17 @@ export default function Footer() {
 
 				<div className={styles.bottom}>
 					<div className={styles.copy}>
-						<img
-							src={solinycLogo}
-							alt="SOLINYC LLC"
-							className={styles.solinycLogo}
-						/>
+						<a
+							href="https://soli.nyc"
+							target="_blank"
+							rel="noopener noreferrer"
+							aria-label="Visit SOLINYC LLC">
+							<img
+								src={solinycLogo}
+								alt=""
+								className={styles.solinycLogo}
+							/>
+						</a>
 						<span>
 							© {new Date().getFullYear()} SOLINYC LLC. All rights
 							reserved.
