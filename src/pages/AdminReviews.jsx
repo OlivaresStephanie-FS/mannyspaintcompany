@@ -19,6 +19,7 @@ export default function AdminReviews() {
 	const [err, setErr] = useState("");
 
 	const [updatingIds, setUpdatingIds] = useState(() => new Set());
+	const [deletingIds, setDeletingIds] = useState(() => new Set());
 
 	const totalPages = useMemo(
 		() => Math.max(1, Math.ceil(total / LIMIT)),
@@ -135,6 +136,63 @@ export default function AdminReviews() {
 		}
 	}
 
+	async function deleteReview(review) {
+		const reviewId = review?._id;
+		if (!reviewId) return;
+
+		const reviewerName = String(review.name || "").trim() || "this reviewer";
+		const confirmed = window.confirm(
+			`Permanently delete the review from ${reviewerName}? This cannot be undone.`,
+		);
+		if (!confirmed) return;
+
+		setErr("");
+
+		const t = String(getToken() || "").trim();
+		if (!t) {
+			clearToken();
+			navigate("/admin/login");
+			return;
+		}
+
+		setDeletingIds((current) => new Set(current).add(reviewId));
+
+		try {
+			const res = await fetch("/.netlify/functions/admin-delete-review", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${t}`,
+				},
+				body: JSON.stringify({ reviewId }),
+			});
+
+			if (res.status === 401) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
+
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok || !data.ok) {
+				throw new Error(data?.error || "Could not delete review");
+			}
+
+			setItems((current) =>
+				current.filter((item) => item._id !== reviewId),
+			);
+			setTotal((count) => Math.max(0, Number(count || 0) - 1));
+		} catch (e) {
+			setErr(e?.message || "Could not delete review");
+		} finally {
+			setDeletingIds((current) => {
+				const next = new Set(current);
+				next.delete(reviewId);
+				return next;
+			});
+		}
+	}
+
 	function logout() {
 		clearToken();
 		navigate("/admin/login");
@@ -181,7 +239,8 @@ export default function AdminReviews() {
 
 			<div className={styles.list}>
 				{items.map((r) => {
-					const busy = updatingIds.has(r._id);
+					const busy =
+						updatingIds.has(r._id) || deletingIds.has(r._id);
 
 					return (
 						<div
@@ -248,6 +307,16 @@ export default function AdminReviews() {
 									className={styles.btnSmall}
 									type="button">
 									Set Pending
+								</button>
+
+								<button
+									onClick={() => deleteReview(r)}
+									disabled={busy}
+									className={styles.btnSmall}
+									type="button">
+									{deletingIds.has(r._id)
+										? "Deleting…"
+										: "Delete"}
 								</button>
 							</div>
 						</div>
