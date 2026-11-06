@@ -42,6 +42,7 @@ export default function AdminQuotes() {
 
 	const [draftStatus, setDraftStatus] = useState({});
 	const [savingIds, setSavingIds] = useState(() => new Set());
+	const [deletingIds, setDeletingIds] = useState(() => new Set());
 	const [selectedQuote, setSelectedQuote] = useState(null);
 
 	const quoteIdFromUrl = String(searchParams.get("quote") || "").trim();
@@ -269,6 +270,67 @@ export default function AdminQuotes() {
 		}
 	}
 
+	async function deleteQuote(quote) {
+		const quoteId = quote?._id;
+		if (!quoteId) return;
+
+		const clientName = String(quote.name || "").trim() || "this client";
+		const confirmed = window.confirm(
+			`Permanently delete the quote from ${clientName}? This cannot be undone.`,
+		);
+		if (!confirmed) return;
+
+		setError("");
+
+		const t = String(getToken() || "").trim();
+		if (!t) {
+			clearToken();
+			navigate("/admin/login");
+			return;
+		}
+
+		setDeletingIds((current) => new Set(current).add(quoteId));
+
+		try {
+			const res = await fetch("/.netlify/functions/admin-delete-quote", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${t}`,
+				},
+				body: JSON.stringify({ quoteId }),
+			});
+
+			if (res.status === 401) {
+				clearToken();
+				navigate("/admin/login");
+				return;
+			}
+
+			const data = await res.json().catch(() => ({}));
+
+			if (data.ok || data.quoteDeleted) {
+				if (selectedQuote?._id === quoteId) closeQuote();
+				setItems((current) =>
+					current.filter((item) => item._id !== quoteId),
+				);
+				setTotal((count) => Math.max(0, Number(count || 0) - 1));
+			}
+
+			if (!res.ok || !data.ok) {
+				throw new Error(data?.error || "Could not delete quote");
+			}
+		} catch (e) {
+			setError(e?.message || "Could not delete quote");
+		} finally {
+			setDeletingIds((current) => {
+				const next = new Set(current);
+				next.delete(quoteId);
+				return next;
+			});
+		}
+	}
+
 	return (
 		<div className={styles.page}>
 			<AdminNav />
@@ -479,14 +541,29 @@ export default function AdminQuotes() {
 										</td>
 
 										<td className={styles.td}>
-											<button
-												type="button"
-												className={styles.btnSmall}
-												onClick={() =>
-													openQuote(q._id)
-												}>
-												View
-											</button>
+											<div className={styles.row}>
+												<button
+													type="button"
+													className={styles.btnSmall}
+													onClick={() =>
+														openQuote(q._id)
+													}>
+													View
+												</button>
+												<button
+													type="button"
+													className={styles.btnSmall}
+													disabled={deletingIds.has(
+														q._id,
+													)}
+													onClick={() =>
+														deleteQuote(q)
+													}>
+													{deletingIds.has(q._id)
+														? "Deleting…"
+														: "Delete"}
+												</button>
+											</div>
 										</td>
 									</tr>
 								);
