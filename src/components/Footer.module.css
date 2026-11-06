@@ -101,8 +101,20 @@
 }
 
 .copy {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
 	color: rgba(255, 255, 255, 0.45);
 	font-size: 13px;
+}
+
+.solinycLogo {
+	display: block;
+	width: 32px;
+	height: 32px;
+	flex: 0 0 auto;
+	object-fit: contain;
 }
 
 .admin {

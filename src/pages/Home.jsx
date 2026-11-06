@@ -258,7 +258,7 @@ function ReviewsSection({ onRequestQuote }) {
 					</p>
 					<p className={styles.reviewsEmptyText}>
 						We take pride in the work we do for our clients. As
-						reviews are submitted and approved, they will appear
+						reviews are submitted, they will appear
 						here and on our reviews page.
 					</p>
 					<div className={styles.reviewsEmptyActions}>

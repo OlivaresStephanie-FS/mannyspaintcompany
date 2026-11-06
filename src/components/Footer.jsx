@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import solinycLogo from "../assets/BIO_PIC.png";
 import styles from "./Footer.module.css";
 
 const PHONE_DISPLAY = "(917) 326-1720";
@@ -55,8 +56,15 @@ export default function Footer() {
 
 				<div className={styles.bottom}>
 					<div className={styles.copy}>
-						© {new Date().getFullYear()} SOLINYC LLC. All rights
-						reserved.
+						<img
+							src={solinycLogo}
+							alt="SOLINYC LLC"
+							className={styles.solinycLogo}
+						/>
+						<span>
+							© {new Date().getFullYear()} SOLINYC LLC. All rights
+							reserved.
+						</span>
 					</div>
 					<div className={styles.admin}>
 						<Link to="/admin/login">Admin</Link>
