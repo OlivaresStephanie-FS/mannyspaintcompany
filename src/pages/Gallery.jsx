@@ -10,7 +10,7 @@ export default function Gallery() {
 			<header className={styles.header}>
 				<h1 className={styles.h1}>Project Gallery</h1>
 				<p className={styles.p}>
-					A few before &amp; after examples. Tap the toggle on any card to switch views.
+					Explore our painting and renovation projects. Select a photo to see the work from different stages and angles.
 				</p>
 			</header>
 

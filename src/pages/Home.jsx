@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import PhotoViewer from "../components/PhotoViewer";
 import QuoteForm from "../components/QuoteForm";
 import ServiceIcon from "../components/ServiceIcon";
-import {
-	galleryProjects,
-	GALLERY_USES_PLACEHOLDER_IMAGES,
-} from "../data/galleryProjects";
+import { galleryProjects } from "../data/galleryProjects";
 import styles from "./Home.module.css";
 
 const TRUST_BADGES = [
 	"Free On-Site Estimates",
 	"Fully Insured",
-	"NYC & Tri-State Area",
 	"Residential & Commercial",
 ];
 
@@ -102,8 +99,30 @@ function ReviewSkeleton() {
 	);
 }
 
+function projectPhotos(project) {
+	if (Array.isArray(project.photos) && project.photos.length > 0) {
+		return project.photos;
+	}
+
+	return [
+		{ id: "before", label: "Before", src: project.beforeSrc },
+		{ id: "after", label: "After", src: project.afterSrc },
+	].filter((photo) => photo.src);
+}
+
 function RecentProjectsSection() {
 	const preview = galleryProjects.slice(0, 3);
+	const [viewer, setViewer] = useState(null);
+
+	function openViewer(project) {
+		const photos = projectPhotos(project);
+		const afterIndex = photos.findIndex((photo) => photo.id === "after");
+		setViewer({
+			title: project.title,
+			photos,
+			index: afterIndex >= 0 ? afterIndex : 0,
+		});
+	}
 
 	return (
 		<section className={styles.section}>
@@ -116,27 +135,25 @@ function RecentProjectsSection() {
 				</p>
 			</div>
 
-			{GALLERY_USES_PLACEHOLDER_IMAGES ? (
-				<div className={styles.placeholderBanner} role="note">
-					<strong>Layout preview:</strong> Sample photos are shown
-					below. This section is ready for real Manny&apos;s Painting
-					Company project images.
-				</div>
-			) : null}
-
 			<div className={styles.projectsGrid}>
 				{preview.map((project) => (
 					<article
 						key={project.title}
 						className={styles.projectPreview}>
 						<div className={styles.projectMedia}>
-							<img
-								src={project.afterSrc}
-								alt={`${project.title} — finished result`}
-								className={styles.projectImg}
-								loading="lazy"
-							/>
-							{GALLERY_USES_PLACEHOLDER_IMAGES ? (
+							<button
+								type="button"
+								className={styles.projectPhotoButton}
+								onClick={() => openViewer(project)}
+								aria-label={`View larger photo: ${project.title} — finished result`}>
+								<img
+									src={project.afterSrc}
+									alt=""
+									className={styles.projectImg}
+									loading="lazy"
+								/>
+							</button>
+							{project.placeholder ? (
 								<span className={styles.sampleBadge}>
 									Sample photo
 								</span>
@@ -165,6 +182,20 @@ function RecentProjectsSection() {
 					View Full Gallery
 				</Link>
 			</div>
+
+			{viewer ? (
+				<PhotoViewer
+					title={viewer.title}
+					photos={viewer.photos}
+					index={viewer.index}
+					onIndexChange={(index) =>
+						setViewer((current) =>
+							current ? { ...current, index } : current,
+						)
+					}
+					onClose={() => setViewer(null)}
+				/>
+			) : null}
 		</section>
 	);
 }

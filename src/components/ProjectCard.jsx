@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PhotoViewer from "./PhotoViewer";
 import styles from "./ProjectCard.module.css";
 
 export default function ProjectCard({
@@ -8,40 +9,44 @@ export default function ProjectCard({
 	description,
 	beforeSrc,
 	afterSrc,
+	photos,
 }) {
-	const [view, setView] = useState("after");
+	const views =
+		Array.isArray(photos) && photos.length > 0
+			? photos
+			: [
+					{ id: "before", label: "Before", src: beforeSrc },
+					{ id: "after", label: "After", src: afterSrc },
+				];
 
-	const src = view === "before" ? beforeSrc : afterSrc;
+	const coverIndex = Math.max(
+		0,
+		views.findIndex((photo) => photo.id === "after" || photo.src === afterSrc),
+	);
+	const cover = views[coverIndex];
+	const [viewerOpen, setViewerOpen] = useState(false);
+	const [viewerIndex, setViewerIndex] = useState(coverIndex);
+
+	function openViewer() {
+		setViewerIndex(coverIndex);
+		setViewerOpen(true);
+	}
 
 	return (
 		<article className={styles.card}>
 			<div className={styles.media}>
-				<img
-					src={src}
-					alt={`${title} - ${view}`}
-					className={styles.img}
-					loading="lazy"
-				/>
-
-				<div className={styles.chipRow}>
-					<button
-						type="button"
-						className={`${styles.chip} ${
-							view === "before" ? styles.chipActive : ""
-						}`}
-						onClick={() => setView("before")}>
-						Before
-					</button>
-
-					<button
-						type="button"
-						className={`${styles.chip} ${
-							view === "after" ? styles.chipActive : ""
-						}`}
-						onClick={() => setView("after")}>
-						After
-					</button>
-				</div>
+				<button
+					type="button"
+					className={styles.photoButton}
+					onClick={openViewer}
+					aria-label={`View larger photo: ${title} — finished result`}>
+					<img
+						src={cover.src}
+						alt=""
+						className={styles.img}
+						loading="lazy"
+					/>
+				</button>
 			</div>
 
 			<div className={styles.body}>
@@ -53,18 +58,17 @@ export default function ProjectCard({
 				</p>
 
 				<p className={styles.desc}>{description}</p>
-
-				<div className={styles.linkRow}>
-					<span className={styles.subtle}>
-						Tap Before/After to toggle
-					</span>
-					<span className={styles.subtle}>
-						{view === "before"
-							? "Viewing: Before"
-							: "Viewing: After"}
-					</span>
-				</div>
 			</div>
+
+			{viewerOpen ? (
+				<PhotoViewer
+					title={title}
+					photos={views}
+					index={viewerIndex}
+					onIndexChange={setViewerIndex}
+					onClose={() => setViewerOpen(false)}
+				/>
+			) : null}
 		</article>
 	);
 }

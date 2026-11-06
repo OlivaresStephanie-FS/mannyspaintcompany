@@ -1,16 +1,37 @@
 .card {
-	border: 1px solid #eee;
-	border-radius: 16px;
-	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--border);
 	background: #fff;
+	overflow: hidden;
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
 }
 
 .media {
 	position: relative;
-	width: 100%;
-	aspect-ratio: 16 / 10;
+	aspect-ratio: 4 / 3;
 	overflow: hidden;
-	background: #f7f7f7;
+	background: var(--warm-bg);
+}
+
+.photoButton {
+	all: unset;
+	display: block;
+	width: 100%;
+	height: 100%;
+	cursor: zoom-in;
+}
+
+.photoButton:focus-visible {
+	outline: 2px solid #111;
+	outline-offset: -4px;
 }
 
 .img {
@@ -20,70 +41,31 @@
 	display: block;
 }
 
-.chipRow {
-	position: absolute;
-	inset: 12px 12px auto 12px;
-	display: flex;
-	gap: 8px;
-}
-
-/* IMPORTANT: this prevents global button styles from breaking the chips */
-.chip {
-	all: unset;
-	box-sizing: border-box;
-	padding: 6px 10px;
-	border-radius: 999px;
-	font-size: 12px;
-	font-weight: 700;
-	border: 1px solid #e6e6e6;
-	cursor: pointer;
-	user-select: none;
-	-webkit-user-select: none;
-	background: rgba(255, 255, 255, 0.92);
-	color: #111;
-}
-
-.chipActive {
-	background: #111;
-	color: #fff;
-	border-color: #111;
-}
-
 .body {
-	padding: 16px;
 	display: grid;
 	gap: 8px;
+	padding: 20px 22px 22px;
 }
 
 .title {
-	font-size: 16px;
-	font-weight: 800;
-	color: #111;
 	margin: 0;
+	font-size: 17px;
+	font-weight: 900;
+	color: var(--text);
+	letter-spacing: -0.3px;
+	line-height: 1.25;
 }
 
 .meta {
-	font-size: 13px;
-	color: #666;
 	margin: 0;
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--muted);
 }
 
 .desc {
-	font-size: 14px;
-	color: #333;
-	line-height: 1.5;
 	margin: 0;
-}
-
-.linkRow {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: 6px;
-	gap: 12px;
-}
-
-.subtle {
-	font-size: 12px;
-	color: #777;
+	font-size: 14px;
+	line-height: 1.6;
+	color: #555;
 }
