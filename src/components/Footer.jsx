@@ -6,6 +6,15 @@ const PHONE_DISPLAY = "(917) 326-1720";
 const PHONE_HREF = "tel:+19173261720";
 const EMAIL = "manuelico11@gmail.com";
 
+function scrollToQuoteForm() {
+	const el = document.getElementById("quote");
+	if (!el) return;
+	const nav = document.querySelector("header");
+	const offset = nav ? nav.offsetHeight + 8 : 0;
+	const top = el.getBoundingClientRect().top + window.scrollY - offset;
+	window.scrollTo(0, Math.max(0, top));
+}
+
 export default function Footer() {
 	return (
 		<footer className={styles.wrap}>
@@ -30,7 +39,9 @@ export default function Footer() {
 							<Link to="/">Home</Link>
 							<Link to="/gallery">Gallery</Link>
 							<Link to="/reviews">Reviews</Link>
-							<a href="/#quote">Request Estimate</a>
+							<Link to="/#quote" onClick={scrollToQuoteForm}>
+								Request Estimate
+							</Link>
 						</nav>
 					</div>
 

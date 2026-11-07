@@ -43,6 +43,34 @@ const ICONS = {
 			<path d="M20 8l2 2" />
 		</>
 	),
+	flooring: (
+		<>
+			<path d="M3 7h18" />
+			<path d="M3 12h18" />
+			<path d="M3 17h18" />
+			<path d="M8 7v5" />
+			<path d="M15 12v5" />
+		</>
+	),
+	cleaning: (
+		<>
+			<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z" />
+			<path d="M5 3v4" />
+			<path d="M3 5h4" />
+			<path d="M19 17v4" />
+			<path d="M17 19h4" />
+		</>
+	),
+	deepCleaning: (
+		<>
+			<path d="M10 7V4h4v3" />
+			<path d="M8 7h8l-1 14H9z" />
+			<path d="M5 4h.01" />
+			<path d="M4 7h.01" />
+			<path d="M6 5h.01" />
+			<path d="M3 9h.01" />
+		</>
+	),
 };
 
 export default function ServiceIcon({ name, className }) {

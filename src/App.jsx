@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Gallery from "./pages/Gallery";
@@ -11,9 +12,30 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminActivity from "./pages/AdminActivity";
 import Footer from "./components/Footer";
 
+function ScrollToTop() {
+	const { pathname, hash } = useLocation();
+
+	useEffect(() => {
+		if (hash) {
+			const el = document.getElementById(decodeURIComponent(hash.slice(1)));
+			if (el) {
+				const nav = document.querySelector("header");
+				const offset = nav ? nav.offsetHeight + 8 : 0;
+				const top = el.getBoundingClientRect().top + window.scrollY - offset;
+				window.scrollTo(0, Math.max(0, top));
+				return;
+			}
+		}
+		window.scrollTo(0, 0);
+	}, [pathname, hash]);
+
+	return null;
+}
+
 export default function App() {
 	return (
 		<BrowserRouter>
+			<ScrollToTop />
 			<Navbar />
 			<main className="container">
 				<Routes>

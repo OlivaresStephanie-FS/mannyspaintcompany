@@ -43,6 +43,21 @@ const SERVICES = [
 		desc: "Reliable turnover painting for landlords, property managers, and agents—consistent quality, clear scheduling, and units ready for the next tenant.",
 		icon: "turnover",
 	},
+	{
+		title: "Flooring Installation & Restoration",
+		desc: "Professional flooring installation, repairs, sanding, and refinishing to restore worn surfaces and deliver smooth, durable, long-lasting results.",
+		icon: "flooring",
+	},
+	{
+		title: "General Cleaning",
+		desc: "Routine residential and commercial cleaning, including dusting, vacuuming, mopping, surface cleaning, and interior window cleaning to keep spaces clean and welcoming.",
+		icon: "cleaning",
+	},
+	{
+		title: "Deep Cleaning",
+		desc: "Detailed, top-to-bottom cleaning targeting built-up dirt, grime, and hard-to-reach areas, including kitchens, bathrooms, fixtures, and interior windows.",
+		icon: "deepCleaning",
+	},
 ];
 
 const WHY_CHOOSE = [
